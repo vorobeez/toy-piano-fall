@@ -1,12 +1,8 @@
 import { EventDispatcher } from "three";
+import type { Sizes } from "../../ports/sizes";
 
 type ResizeEventData = {
-  sizes: {
-    width: number;
-    height: number;
-    pixelRatio: number;
-    aspectRatio: number;
-  };
+  sizes: Sizes;
 };
 
 type ResizeEventListener = (data: ResizeEventData["sizes"]) => void;
@@ -15,12 +11,15 @@ type EventMap = {
   resize: ResizeEventData;
 };
 
-export class SizesService {
-  width: number = 0;
-  height: number = 0;
-  pixelRatio: number = 0;
-  aspectRatio: number = 0;
-  dispatcher: EventDispatcher<EventMap>;
+export class SizesDispatcher {
+  private dispatcher: EventDispatcher<EventMap>;
+
+  sizes: Sizes = {
+    width: 0,
+    height: 0,
+    pixelRatio: 0,
+    aspectRatio: 0,
+  };
 
   constructor() {
     this.updateSizes();
@@ -33,21 +32,18 @@ export class SizesService {
   }
 
   private updateSizes() {
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
-    this.aspectRatio = this.width / this.height;
-    this.pixelRatio = Math.min(window.devicePixelRatio, 2);
+    this.sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      aspectRatio: window.innerWidth / window.innerHeight,
+      pixelRatio: Math.min(window.devicePixelRatio, 2),
+    };
   }
 
   private dispatchResize() {
     this.dispatcher.dispatchEvent({
       type: "resize",
-      sizes: {
-        width: this.width,
-        height: this.height,
-        pixelRatio: this.pixelRatio,
-        aspectRatio: this.aspectRatio,
-      },
+      sizes: this.sizes,
     });
   }
 
