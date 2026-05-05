@@ -68,6 +68,8 @@ export class ThreeJSRenderer {
       }),
     );
     floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    floorMesh.castShadow = true;
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 

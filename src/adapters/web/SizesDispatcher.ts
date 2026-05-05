@@ -1,5 +1,5 @@
-import { EventDispatcher } from "three";
 import type { Sizes } from "../../ports/sizes";
+import { Dispatcher } from "../../ports/Dispatcher";
 
 type ResizeEventData = {
   sizes: Sizes;
@@ -11,9 +11,7 @@ type EventMap = {
   resize: ResizeEventData;
 };
 
-export class SizesDispatcher {
-  private dispatcher: EventDispatcher<EventMap>;
-
+export class SizesDispatcher extends Dispatcher<EventMap, Sizes> {
   sizes: Sizes = {
     width: 0,
     height: 0,
@@ -22,16 +20,16 @@ export class SizesDispatcher {
   };
 
   constructor() {
-    this.updateSizes();
-    this.dispatcher = new EventDispatcher<EventMap>();
+    super();
+    this.update();
 
     window.addEventListener("resize", () => {
-      this.updateSizes();
-      this.dispatchResize();
+      this.update();
+      this.dispatch();
     });
   }
 
-  private updateSizes() {
+  protected update() {
     this.sizes = {
       width: window.innerWidth,
       height: window.innerHeight,
@@ -40,14 +38,14 @@ export class SizesDispatcher {
     };
   }
 
-  private dispatchResize() {
+  protected dispatch() {
     this.dispatcher.dispatchEvent({
       type: "resize",
       sizes: this.sizes,
     });
   }
 
-  addResizeListener(listener: ResizeEventListener) {
+  addListener(listener: ResizeEventListener) {
     this.dispatcher.addEventListener("resize", ({ sizes }) => listener(sizes));
   }
 }
