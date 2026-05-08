@@ -8,17 +8,17 @@ export const main = () => {
 
   const sizesDispatcher = new SizesDispatcher();
   const mouseDispatcher = new MouseDispatcher(sizesDispatcher);
-  const renderer = new ThreeJSRenderer(canvas, sizesDispatcher.sizes);
+  const renderer = new ThreeJSRenderer(
+    canvas,
+    sizesDispatcher,
+    mouseDispatcher,
+  );
 
   sizesDispatcher.addListener((sizes) => {
     renderer.updateSizes(sizes);
   });
 
-  mouseDispatcher.addListener((mouse) => {
-    console.log(mouse);
-  });
-
-  renderer.startAnimationLoop();
+  renderer.startLoop();
 };
 
 main();

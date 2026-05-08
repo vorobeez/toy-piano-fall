@@ -1,21 +1,26 @@
 import * as THREE from "three";
 import type { Sizes } from "../../ports/sizes";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import {
-  GLTFLoader,
-  type GLTF,
-} from "three/examples/jsm/loaders/GLTFLoader.js";
 import { debugDirectionalLight, debugRenderer } from "./debug";
+import type { Repository } from "../../ports/Repository";
+import type { Mouse } from "../../ports/mouse";
+import { MouseRaycaster } from "./MouseRaycaster";
+import { PianoModel } from "./PianoModel";
 
 export class ThreeJSRenderer {
   private renderer: THREE.WebGLRenderer;
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private orbitControls: OrbitControls;
-  private pianoGltf: GLTF | undefined = undefined;
-  private gltfLoader: GLTFLoader;
+  private mouseRaycaster: MouseRaycaster;
+  private pianoModel: PianoModel;
 
-  constructor(canvas: HTMLCanvasElement, sizes: Sizes) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    sizesRepository: Repository<Sizes>,
+    mouseRepository: Repository<Mouse>,
+  ) {
+    const sizes = sizesRepository.getState();
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: sizes.pixelRatio > 1 ? true : false,
@@ -37,27 +42,15 @@ export class ThreeJSRenderer {
     this.orbitControls = new OrbitControls(this.camera, canvas);
     this.orbitControls.enableDamping = true;
 
-    this.gltfLoader = new GLTFLoader();
+    this.mouseRaycaster = new MouseRaycaster(mouseRepository);
+
+    this.pianoModel = new PianoModel((model) => {
+      this.scene.add(model);
+    });
 
     debugRenderer(this.renderer);
 
     this.addTestObjects();
-    this.loadPiano();
-  }
-
-  private async loadPiano() {
-    this.pianoGltf = await this.gltfLoader.loadAsync("/models/toy-piano.glb");
-
-    this.pianoGltf.scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
-
-    this.pianoGltf.scene.rotation.y = -Math.PI / 2;
-
-    this.scene.add(this.pianoGltf.scene);
   }
 
   private addTestObjects() {
@@ -98,15 +91,26 @@ export class ThreeJSRenderer {
     this.camera.updateProjectionMatrix();
   }
 
-  public startAnimationLoop() {
-    this.animationTick();
+  public startLoop() {
+    this.tick();
   }
 
-  private animationTick() {
+  private tick() {
+    const firstIntersection = this.mouseRaycaster.checkIntersections(
+      this.camera,
+      this.pianoModel.keys,
+    )[0];
+
+    this.pianoModel.resetKeys();
+
+    if (firstIntersection) {
+      this.pianoModel.highlightKey(firstIntersection.object.name);
+    }
+
     this.orbitControls.update();
 
     this.renderer.render(this.scene, this.camera);
 
-    window.requestAnimationFrame(this.animationTick.bind(this));
+    window.requestAnimationFrame(this.tick.bind(this));
   }
 }

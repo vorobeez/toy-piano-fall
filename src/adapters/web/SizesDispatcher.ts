@@ -1,5 +1,6 @@
 import type { Sizes } from "../../ports/sizes";
 import { Dispatcher } from "../../ports/Dispatcher";
+import type { Repository } from "../../ports/Repository";
 
 type ResizeEventData = {
   sizes: Sizes;
@@ -11,8 +12,11 @@ type EventMap = {
   resize: ResizeEventData;
 };
 
-export class SizesDispatcher extends Dispatcher<EventMap, Sizes> {
-  sizes: Sizes = {
+export class SizesDispatcher
+  extends Dispatcher<EventMap, Sizes>
+  implements Repository<Sizes>
+{
+  private sizes: Sizes = {
     width: 0,
     height: 0,
     pixelRatio: 0,
@@ -43,6 +47,10 @@ export class SizesDispatcher extends Dispatcher<EventMap, Sizes> {
       type: "resize",
       sizes: this.sizes,
     });
+  }
+
+  getState(): Sizes {
+    return this.sizes;
   }
 
   addListener(listener: ResizeEventListener) {
