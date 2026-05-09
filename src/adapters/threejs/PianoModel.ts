@@ -123,4 +123,12 @@ export class PianoModel {
       }
     }
   }
+
+  pressKey(keyName: string) {
+    console.log("Press key", keyName);
+  }
+
+  releaseKey(keyName: string) {
+    console.log("Release key", keyName);
+  }
 }

@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import type { Sizes } from "../../ports/sizes";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { debugDirectionalLight, debugRenderer } from "./debug";
 import type { Repository } from "../../ports/Repository";
 import type { Mouse } from "../../ports/mouse";
+import type { Sizes } from "../../ports/sizes";
 import { MouseRaycaster } from "./MouseRaycaster";
 import { PianoModel } from "./PianoModel";
 
@@ -14,6 +14,7 @@ export class ThreeJSRenderer {
   private orbitControls: OrbitControls;
   private mouseRaycaster: MouseRaycaster;
   private pianoModel: PianoModel;
+  private mouseRepository: Repository<Mouse>;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -42,6 +43,7 @@ export class ThreeJSRenderer {
     this.orbitControls = new OrbitControls(this.camera, canvas);
     this.orbitControls.enableDamping = true;
 
+    this.mouseRepository = mouseRepository;
     this.mouseRaycaster = new MouseRaycaster(mouseRepository);
 
     this.pianoModel = new PianoModel((model) => {
@@ -96,6 +98,7 @@ export class ThreeJSRenderer {
   }
 
   private tick() {
+    const mouseState = this.mouseRepository.getState();
     const firstIntersection = this.mouseRaycaster.checkIntersections(
       this.camera,
       this.pianoModel.keys,
@@ -105,6 +108,12 @@ export class ThreeJSRenderer {
 
     if (firstIntersection) {
       this.pianoModel.highlightKey(firstIntersection.object.name);
+
+      if (mouseState.down) {
+        this.pianoModel.pressKey(firstIntersection.object.name);
+      } else {
+        this.pianoModel.releaseKey(firstIntersection.object.name);
+      }
     }
 
     this.orbitControls.update();

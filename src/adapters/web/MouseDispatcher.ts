@@ -1,29 +1,17 @@
 import type { Mouse } from "../../ports/mouse";
-import { Dispatcher } from "../../ports/Dispatcher";
+import { StateDispatcher } from "../../ports/StateDispatcher";
 import type { Repository } from "../../ports/Repository";
 import type { Sizes } from "../../ports/sizes";
 
-type MouseEventData = {
-  mouse: Mouse;
+const INITIAL_STATE: Mouse = {
+  x: 0,
+  y: 0,
+  down: false,
 };
 
-type MouseEventListener = (data: MouseEventData["mouse"]) => void;
-
-type EventMap = {
-  mouse: MouseEventData;
-};
-
-export class MouseDispatcher
-  extends Dispatcher<EventMap, Mouse>
-  implements Repository<Mouse>
-{
-  private mouse: Mouse = {
-    x: 0,
-    y: 0,
-  };
-
+export class MouseDispatcher extends StateDispatcher<Mouse> {
   constructor(sizesRepository: Repository<Sizes>) {
-    super();
+    super(INITIAL_STATE);
 
     window.addEventListener("mousemove", (event) => {
       const sizes = sizesRepository.getState();
@@ -37,24 +25,19 @@ export class MouseDispatcher
       });
       this.dispatch();
     });
-  }
 
-  protected update(mouse: Mouse) {
-    this.mouse = mouse;
-  }
-
-  protected dispatch() {
-    this.dispatcher.dispatchEvent({
-      type: "mouse",
-      mouse: this.mouse,
+    window.addEventListener("mousedown", () => {
+      this.update({
+        down: true,
+      });
+      this.dispatch();
     });
-  }
 
-  getState(): Mouse {
-    return this.mouse;
-  }
-
-  addListener(listener: MouseEventListener) {
-    this.dispatcher.addEventListener("mouse", ({ mouse }) => listener(mouse));
+    window.addEventListener("mouseup", () => {
+      this.update({
+        down: false,
+      });
+      this.dispatch();
+    });
   }
 }
