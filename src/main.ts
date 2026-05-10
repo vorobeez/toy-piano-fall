@@ -1,4 +1,4 @@
-import { ThreeJSRenderer } from "./adapters/threejs/ThreeJSRenderer";
+import { ThreeJSRenderer } from "./entrypoints/threejs/ThreeJSRenderer";
 import { MouseDispatcher } from "./adapters/web/MouseDispatcher";
 import { SizesDispatcher } from "./adapters/web/SizesDispatcher";
 

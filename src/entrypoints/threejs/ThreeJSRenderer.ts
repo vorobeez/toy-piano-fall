@@ -5,7 +5,7 @@ import type { Repository } from "../../ports/Repository";
 import type { Mouse } from "../../ports/mouse";
 import type { Sizes } from "../../ports/sizes";
 import { MouseRaycaster } from "./MouseRaycaster";
-import { PianoModel } from "./PianoModel";
+import { PianoService } from "../../services/piano/PianoService";
 
 export class ThreeJSRenderer {
   private renderer: THREE.WebGLRenderer;
@@ -13,7 +13,7 @@ export class ThreeJSRenderer {
   private camera: THREE.PerspectiveCamera;
   private orbitControls: OrbitControls;
   private mouseRaycaster: MouseRaycaster;
-  private pianoModel: PianoModel;
+  private pianoService: PianoService;
   private mouseRepository: Repository<Mouse>;
 
   constructor(
@@ -46,7 +46,7 @@ export class ThreeJSRenderer {
     this.mouseRepository = mouseRepository;
     this.mouseRaycaster = new MouseRaycaster(mouseRepository);
 
-    this.pianoModel = new PianoModel((model) => {
+    this.pianoService = new PianoService((model) => {
       this.scene.add(model);
     });
 
@@ -101,20 +101,22 @@ export class ThreeJSRenderer {
     const mouseState = this.mouseRepository.getState();
     const firstIntersection = this.mouseRaycaster.checkIntersections(
       this.camera,
-      this.pianoModel.keys,
+      this.pianoService.getKeyMeshes(),
     )[0];
 
     if (firstIntersection) {
-      this.pianoModel.highlightKey(firstIntersection.object.name);
+      this.pianoService.setActiveKey(firstIntersection.object.name);
     } else {
-      this.pianoModel.resetActiveKey();
+      this.pianoService.resetActiveKey();
     }
 
     if (mouseState.down) {
-      this.pianoModel.pressKey();
+      this.pianoService.pressKey();
     } else {
-      this.pianoModel.releaseKey();
+      this.pianoService.releaseKey();
     }
+
+    this.pianoService.tick();
 
     this.orbitControls.update();
 

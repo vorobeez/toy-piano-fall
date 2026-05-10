@@ -4,43 +4,24 @@ import {
   GLTFLoader,
   type GLTF,
 } from "three/examples/jsm/loaders/GLTFLoader.js";
+import {
+  BLACK_KEYS,
+  isWhiteKey,
+  KEY_PREFIX,
+  WHITE_KEYS,
+  type PianoState,
+} from "../../domains/PianoModel";
 
 const HIGHLIGHT_COLOR = "#E78E04";
 
-const KEY_PREFIX = "Key";
-
-const WHITE_KEYS = [1, 3, 5, 6, 8, 10, 12, 13, 15, 17, 18, 20, 22, 24, 25];
-
-const BLACK_KEYS = Array.from({ length: 25 }, (_, i) => i + 1).filter(
-  (key) => !WHITE_KEYS.includes(key),
-);
-
-const KEY_PATTERN = /Key(\d{1,2})/;
-
-const getKeyNum = (keyName: string): number => {
-  const result = KEY_PATTERN.exec(keyName);
-
-  if (!result) {
-    throw new Error(`Provided incorrect key name: ${keyName}`);
-  }
-
-  return Number.parseInt(result[1]);
-};
-
-const isWhiteKey = (keyName: string): boolean => {
-  return WHITE_KEYS.includes(getKeyNum(keyName));
-};
-
 type KeyMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
-export class PianoModel {
+export class PianoThreeJS {
   private pianoGltf: GLTF | undefined = undefined;
   private whiteKeyMaterial: THREE.MeshStandardMaterial | undefined;
   private whiteKeyMaterialHighlighted: THREE.MeshStandardMaterial | undefined;
   private blackKeyMaterial: THREE.MeshStandardMaterial | undefined;
   private blackKeyMaterialHighlighted: THREE.MeshStandardMaterial | undefined;
-  private activeKey: KeyMesh | undefined = undefined;
-  private keyPressed: boolean = false;
   keys: KeyMesh[];
 
   constructor(onLoad: (model: THREE.Object3D) => void) {
@@ -105,61 +86,31 @@ export class PianoModel {
     );
   }
 
-  public resetActiveKey() {
-    if (this.keyPressed) {
-      return;
-    }
-
-    if (!this.activeKey) {
-      return;
-    }
-
-    if (isWhiteKey(this.activeKey.name) && this.whiteKeyMaterial) {
-      this.activeKey.material = this.whiteKeyMaterial;
-    } else if (this.blackKeyMaterial) {
-      this.activeKey.material = this.blackKeyMaterial;
-    }
-
-    this.activeKey = undefined;
-  }
-
-  highlightKey(keyName: string) {
-    if (this.keyPressed) {
-      return;
-    }
-
-    if (this.activeKey?.name === keyName) {
-      return;
-    }
-
-    if (this.activeKey) {
-      this.resetActiveKey();
-    }
-
-    const key = this.keys.find((key) => key.name === keyName);
-
-    if (key) {
-      if (isWhiteKey(keyName) && this.whiteKeyMaterialHighlighted) {
-        key.material = this.whiteKeyMaterialHighlighted;
-      } else if (this.blackKeyMaterialHighlighted) {
-        key.material = this.blackKeyMaterialHighlighted;
+  tick({ activeKey, keyPressed }: PianoState) {
+    this.keys.forEach((key) => {
+      if (isWhiteKey(key.name) && this.whiteKeyMaterial) {
+        key.material = this.whiteKeyMaterial;
+      } else if (this.blackKeyMaterial) {
+        key.material = this.blackKeyMaterial;
       }
-    }
+    });
 
-    this.activeKey = key;
-  }
+    if (activeKey) {
+      const keyMesh = this.keys.find((key) => key.name === activeKey);
 
-  pressKey() {
-    if (this.activeKey && !this.keyPressed) {
-      this.activeKey.rotation.z = -Math.PI / 50;
-      this.keyPressed = true;
-    }
-  }
+      if (keyMesh) {
+        if (isWhiteKey(activeKey) && this.whiteKeyMaterialHighlighted) {
+          keyMesh.material = this.whiteKeyMaterialHighlighted;
+        } else if (this.blackKeyMaterialHighlighted) {
+          keyMesh.material = this.blackKeyMaterialHighlighted;
+        }
 
-  releaseKey() {
-    if (this.activeKey && this.keyPressed) {
-      this.activeKey.rotation.z = 0;
-      this.keyPressed = false;
+        if (keyPressed) {
+          keyMesh.rotation.z = -Math.PI / 50;
+        } else {
+          keyMesh.rotation.z = 0;
+        }
+      }
     }
   }
 }
