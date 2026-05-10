@@ -15,6 +15,7 @@ export class ThreeJSRenderer {
   private mouseRaycaster: MouseRaycaster;
   private pianoService: PianoService;
   private mouseRepository: Repository<Mouse>;
+  private timer: THREE.Timer;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -26,6 +27,9 @@ export class ThreeJSRenderer {
       canvas,
       antialias: sizes.pixelRatio > 1 ? true : false,
     });
+
+    this.timer = new THREE.Timer();
+    this.timer.connect(document);
 
     this.renderer.setSize(sizes.width, sizes.height);
     this.renderer.setPixelRatio(sizes.pixelRatio);
@@ -52,20 +56,11 @@ export class ThreeJSRenderer {
 
     debugRenderer(this.renderer);
 
-    this.addTestObjects();
+    this.addFloor();
+    this.addLights();
   }
 
-  private addTestObjects() {
-    const floorMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(10, 10),
-      new THREE.MeshStandardMaterial({
-        color: 0x005500,
-      }),
-    );
-    floorMesh.rotation.x = -Math.PI / 2;
-    floorMesh.receiveShadow = true;
-    floorMesh.castShadow = true;
-
+  private addLights() {
     const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
@@ -78,12 +73,21 @@ export class ThreeJSRenderer {
 
     debugDirectionalLight(directionalLight);
 
-    this.scene.add(
-      floorMesh,
-      ambientLight,
-      directionalLight,
-      directionalLight.target,
+    this.scene.add(ambientLight, directionalLight, directionalLight.target);
+  }
+
+  private addFloor() {
+    const floorMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(10, 10),
+      new THREE.MeshStandardMaterial({
+        color: 0x005500,
+      }),
     );
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    floorMesh.castShadow = true;
+
+    this.scene.add(floorMesh);
   }
 
   public updateSizes({ width, height, pixelRatio, aspectRatio }: Sizes) {
@@ -98,6 +102,10 @@ export class ThreeJSRenderer {
   }
 
   private tick() {
+    this.timer.update();
+
+    const delta = this.timer.getDelta();
+
     const mouseState = this.mouseRepository.getState();
     const firstIntersection = this.mouseRaycaster.checkIntersections(
       this.camera,
@@ -116,7 +124,7 @@ export class ThreeJSRenderer {
       this.pianoService.releaseKey();
     }
 
-    this.pianoService.tick();
+    this.pianoService.tick(delta);
 
     this.orbitControls.update();
 

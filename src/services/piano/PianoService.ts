@@ -28,10 +28,10 @@ export class PianoService {
   }
 
   getKeyMeshes() {
-    return this.pianoThreeJS.keys;
+    return this.pianoThreeJS.keyMeshes;
   }
 
-  tick() {
-    this.pianoThreeJS.tick(this.pianoModel);
+  tick(delta: number) {
+    this.pianoThreeJS.tick(delta, this.pianoModel);
   }
 }

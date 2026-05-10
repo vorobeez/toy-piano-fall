@@ -4,28 +4,19 @@ import {
   GLTFLoader,
   type GLTF,
 } from "three/examples/jsm/loaders/GLTFLoader.js";
-import {
-  BLACK_KEYS,
-  isWhiteKey,
-  KEY_PREFIX,
-  WHITE_KEYS,
-  type PianoState,
-} from "../../domains/PianoModel";
-
-const HIGHLIGHT_COLOR = "#E78E04";
+import { type KeyName, type PianoState } from "../../domains/PianoModel";
+import { PianoKeyThreeJS } from "./PianoKeyThreeJS";
 
 type KeyMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
 export class PianoThreeJS {
+  public keyMeshes: KeyMesh[];
   private pianoGltf: GLTF | undefined = undefined;
-  private whiteKeyMaterial: THREE.MeshStandardMaterial | undefined;
-  private whiteKeyMaterialHighlighted: THREE.MeshStandardMaterial | undefined;
-  private blackKeyMaterial: THREE.MeshStandardMaterial | undefined;
-  private blackKeyMaterialHighlighted: THREE.MeshStandardMaterial | undefined;
-  keys: KeyMesh[];
+  private keys: Record<KeyName, PianoKeyThreeJS>;
 
   constructor(onLoad: (model: THREE.Object3D) => void) {
-    this.keys = [];
+    this.keys = {};
+    this.keyMeshes = [];
 
     const gltfLoader = new GLTFLoader();
 
@@ -43,39 +34,19 @@ export class PianoThreeJS {
 
         this.pianoGltf.scene.rotation.y = -Math.PI / 2;
 
-        this.keys =
+        this.keyMeshes =
           this.pianoGltf.scene
             .getObjectByName("Keys")
             ?.children.filter<KeyMesh>((key) => key instanceof THREE.Mesh) ??
           [];
 
-        const whiteKey = this.pianoGltf.scene.getObjectByName(
-          `${KEY_PREFIX}${WHITE_KEYS[0]}`,
+        this.keys = this.keyMeshes.reduce<Record<KeyName, PianoKeyThreeJS>>(
+          (acc, keyMesh) => {
+            acc[keyMesh.name] = new PianoKeyThreeJS(keyMesh);
+            return acc;
+          },
+          {},
         );
-
-        if (
-          whiteKey &&
-          whiteKey instanceof THREE.Mesh &&
-          whiteKey.material instanceof THREE.MeshStandardMaterial
-        ) {
-          this.whiteKeyMaterial = whiteKey.material;
-          this.whiteKeyMaterialHighlighted = this.whiteKeyMaterial.clone();
-          this.whiteKeyMaterialHighlighted.emissive.set(HIGHLIGHT_COLOR);
-        }
-
-        const blackKey = this.pianoGltf.scene.getObjectByName(
-          `${KEY_PREFIX}${BLACK_KEYS[0]}`,
-        );
-
-        if (
-          blackKey &&
-          blackKey instanceof THREE.Mesh &&
-          blackKey.material instanceof THREE.MeshStandardMaterial
-        ) {
-          this.blackKeyMaterial = blackKey.material;
-          this.blackKeyMaterialHighlighted = this.blackKeyMaterial.clone();
-          this.blackKeyMaterialHighlighted.emissive.set(HIGHLIGHT_COLOR);
-        }
 
         onLoad(this.pianoGltf.scene);
       },
@@ -86,31 +57,32 @@ export class PianoThreeJS {
     );
   }
 
-  tick({ activeKey, keyPressed }: PianoState) {
-    this.keys.forEach((key) => {
-      if (isWhiteKey(key.name) && this.whiteKeyMaterial) {
-        key.material = this.whiteKeyMaterial;
-      } else if (this.blackKeyMaterial) {
-        key.material = this.blackKeyMaterial;
-      }
+  tick(delta: number, { activeKey, keyPressed }: PianoState) {
+    // reset keys materials
+    const keyArr = Object.values(this.keys);
+
+    keyArr.forEach((key) => {
+      key.resetKey();
     });
 
     if (activeKey) {
-      const keyMesh = this.keys.find((key) => key.name === activeKey);
+      const key = this.keys[activeKey];
 
-      if (keyMesh) {
-        if (isWhiteKey(activeKey) && this.whiteKeyMaterialHighlighted) {
-          keyMesh.material = this.whiteKeyMaterialHighlighted;
-        } else if (this.blackKeyMaterialHighlighted) {
-          keyMesh.material = this.blackKeyMaterialHighlighted;
-        }
+      if (!key) {
+        throw new Error(`Key mesh wasn\'t found: ${activeKey}`);
+      }
 
-        if (keyPressed) {
-          keyMesh.rotation.z = -Math.PI / 50;
-        } else {
-          keyMesh.rotation.z = 0;
-        }
+      key.highlightKey();
+
+      if (keyPressed) {
+        key.pressKey();
+      } else {
+        key.releaseKey();
       }
     }
+
+    keyArr.forEach((key) => {
+      key.tick(delta);
+    });
   }
 }
