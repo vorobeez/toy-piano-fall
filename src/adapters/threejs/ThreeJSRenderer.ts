@@ -104,16 +104,16 @@ export class ThreeJSRenderer {
       this.pianoModel.keys,
     )[0];
 
-    this.pianoModel.resetKeys();
-
     if (firstIntersection) {
       this.pianoModel.highlightKey(firstIntersection.object.name);
+    } else {
+      this.pianoModel.resetActiveKey();
+    }
 
-      if (mouseState.down) {
-        this.pianoModel.pressKey(firstIntersection.object.name);
-      } else {
-        this.pianoModel.releaseKey(firstIntersection.object.name);
-      }
+    if (mouseState.down) {
+      this.pianoModel.pressKey();
+    } else {
+      this.pianoModel.releaseKey();
     }
 
     this.orbitControls.update();

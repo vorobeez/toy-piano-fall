@@ -31,13 +31,17 @@ const isWhiteKey = (keyName: string): boolean => {
   return WHITE_KEYS.includes(getKeyNum(keyName));
 };
 
+type KeyMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+
 export class PianoModel {
   private pianoGltf: GLTF | undefined = undefined;
   private whiteKeyMaterial: THREE.MeshStandardMaterial | undefined;
   private whiteKeyMaterialHighlighted: THREE.MeshStandardMaterial | undefined;
   private blackKeyMaterial: THREE.MeshStandardMaterial | undefined;
   private blackKeyMaterialHighlighted: THREE.MeshStandardMaterial | undefined;
-  keys: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>[];
+  private activeKey: KeyMesh | undefined = undefined;
+  private keyPressed: boolean = false;
+  keys: KeyMesh[];
 
   constructor(onLoad: (model: THREE.Object3D) => void) {
     this.keys = [];
@@ -61,9 +65,8 @@ export class PianoModel {
         this.keys =
           this.pianoGltf.scene
             .getObjectByName("Keys")
-            ?.children.filter<
-              THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>
-            >((key) => key instanceof THREE.Mesh) ?? [];
+            ?.children.filter<KeyMesh>((key) => key instanceof THREE.Mesh) ??
+          [];
 
         const whiteKey = this.pianoGltf.scene.getObjectByName(
           `${KEY_PREFIX}${WHITE_KEYS[0]}`,
@@ -102,17 +105,37 @@ export class PianoModel {
     );
   }
 
-  resetKeys() {
-    this.keys.forEach((key) => {
-      if (isWhiteKey(key.name) && this.whiteKeyMaterial) {
-        key.material = this.whiteKeyMaterial;
-      } else if (this.blackKeyMaterial) {
-        key.material = this.blackKeyMaterial;
-      }
-    });
+  public resetActiveKey() {
+    if (this.keyPressed) {
+      return;
+    }
+
+    if (!this.activeKey) {
+      return;
+    }
+
+    if (isWhiteKey(this.activeKey.name) && this.whiteKeyMaterial) {
+      this.activeKey.material = this.whiteKeyMaterial;
+    } else if (this.blackKeyMaterial) {
+      this.activeKey.material = this.blackKeyMaterial;
+    }
+
+    this.activeKey = undefined;
   }
 
   highlightKey(keyName: string) {
+    if (this.keyPressed) {
+      return;
+    }
+
+    if (this.activeKey?.name === keyName) {
+      return;
+    }
+
+    if (this.activeKey) {
+      this.resetActiveKey();
+    }
+
     const key = this.keys.find((key) => key.name === keyName);
 
     if (key) {
@@ -122,13 +145,21 @@ export class PianoModel {
         key.material = this.blackKeyMaterialHighlighted;
       }
     }
+
+    this.activeKey = key;
   }
 
-  pressKey(keyName: string) {
-    console.log("Press key", keyName);
+  pressKey() {
+    if (this.activeKey && !this.keyPressed) {
+      this.activeKey.rotation.z = -Math.PI / 50;
+      this.keyPressed = true;
+    }
   }
 
-  releaseKey(keyName: string) {
-    console.log("Release key", keyName);
+  releaseKey() {
+    if (this.activeKey && this.keyPressed) {
+      this.activeKey.rotation.z = 0;
+      this.keyPressed = false;
+    }
   }
 }
