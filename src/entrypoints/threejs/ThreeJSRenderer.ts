@@ -77,7 +77,7 @@ export class ThreeJSRenderer {
 
   private addFloor() {
     const floorMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(10, 10),
+      new THREE.PlaneGeometry(50, 50),
       new THREE.MeshStandardMaterial({
         color: 0x005500,
       }),

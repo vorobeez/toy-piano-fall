@@ -3,6 +3,8 @@ import { MouseDispatcher } from "./adapters/web/MouseDispatcher";
 import { SizesDispatcher } from "./adapters/web/SizesDispatcher";
 import { PianoService } from "./services/piano/PianoService";
 import { TonePianoAudio } from "./adapters/tone/TonePianoAudio";
+import { RandomWalkStrategy } from "./adapters/tone/RandomWalkStrategy";
+import { ToneBackgroundAudio } from "./adapters/tone/ToneBackgroundAudio";
 
 const startScreen = document.querySelector<HTMLElement>(".start-screen");
 const startButton = document.querySelector<HTMLButtonElement>(".start-button");
@@ -16,6 +18,13 @@ export const main = async () => {
   if (!canvas) {
     throw new Error("html canvas hasn't found");
   }
+
+  const backgroundNotesStrategy = new RandomWalkStrategy();
+  const backgroundAudio = new ToneBackgroundAudio(backgroundNotesStrategy);
+
+  await backgroundAudio.start();
+
+  backgroundAudio.runLoop();
 
   const pianoAudio = new TonePianoAudio();
   const pianoService = new PianoService(pianoAudio);

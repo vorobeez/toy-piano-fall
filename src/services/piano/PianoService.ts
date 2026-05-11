@@ -1,13 +1,13 @@
 import { getNote, PianoModel, type KeyName } from "../../domains/PianoModel";
-import type { PianoAudio } from "../../ports/PianoAudio";
+import type { DiscreteAudio } from "../../ports/Audio";
 import { PianoThreeJS } from "./PianoThreeJS";
 
 export class PianoService {
   private pianoModel: PianoModel;
   private pianoThreeJS: PianoThreeJS;
-  private pianoAudio: PianoAudio;
+  private pianoAudio: DiscreteAudio;
 
-  constructor(pianoAudio: PianoAudio) {
+  constructor(pianoAudio: DiscreteAudio) {
     this.pianoModel = new PianoModel();
     this.pianoThreeJS = new PianoThreeJS();
     this.pianoAudio = pianoAudio;

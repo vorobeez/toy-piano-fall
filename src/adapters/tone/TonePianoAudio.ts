@@ -1,8 +1,10 @@
 import * as Tone from "tone";
-import type { PianoAudio } from "../../ports/PianoAudio";
+import type { DiscreteAudio } from "../../ports/Audio";
 import type { Note } from "../../domains/PianoModel";
 
-export class TonePianoAudio implements PianoAudio {
+const NOTE_DURATION: Tone.Unit.Time = "16n";
+
+export class TonePianoAudio implements DiscreteAudio {
   private leadToneSynth: Tone.MonoSynth | undefined = undefined;
   private bellSynth: Tone.FMSynth | undefined = undefined;
   private noiseSynth: Tone.NoiseSynth | undefined = undefined;
@@ -86,12 +88,8 @@ export class TonePianoAudio implements PianoAudio {
 
     const now = Tone.now();
 
-    this.leadToneSynth.triggerAttackRelease(note, "8n", now);
-    this.bellSynth?.triggerAttackRelease(note, "8n", now);
-    this.noiseSynth?.triggerAttackRelease("8n", now);
-  }
-
-  releaseNote() {
-    //this.leadToneSynth.triggerRelease(Tone.now());
+    this.leadToneSynth.triggerAttackRelease(note, NOTE_DURATION, now);
+    this.bellSynth?.triggerAttackRelease(note, NOTE_DURATION, now);
+    this.noiseSynth?.triggerAttackRelease(NOTE_DURATION, now);
   }
 }
