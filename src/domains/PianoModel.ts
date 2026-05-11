@@ -31,38 +31,65 @@ export const isWhiteKey = (keyName: KeyName): boolean => {
   return WHITE_KEYS.includes(getKeyNum(keyName));
 };
 
-export class PianoModel implements PianoState {
-  activeKey: string | undefined;
-  keyPressed: boolean;
+const INITIAL_STATE: PianoState = {
+  activeKey: undefined,
+  keyPressed: false,
+};
 
-  constructor() {
-    this.activeKey = undefined;
-    this.keyPressed = false;
+export class PianoModel {
+  currentState: PianoState = INITIAL_STATE;
+  prevState: PianoState | undefined = undefined;
+
+  private pushState(nextState: PianoState) {
+    this.prevState = { ...this.currentState };
+    this.currentState = nextState;
   }
 
   setActiveKey(keyName: KeyName) {
-    if (this.keyPressed) {
+    if (this.currentState.keyPressed) {
       return;
     }
 
-    this.activeKey = keyName;
+    if (this.currentState.activeKey === keyName) {
+      return;
+    }
+
+    this.pushState({
+      activeKey: keyName,
+      keyPressed: false,
+    });
   }
 
   resetActiveKey() {
-    if (this.keyPressed) {
+    if (this.currentState.keyPressed) {
       return;
     }
 
-    this.activeKey = undefined;
+    if (this.currentState.activeKey === undefined) {
+      return;
+    }
+
+    this.pushState({
+      activeKey: undefined,
+      keyPressed: false,
+    });
   }
 
   pressKey() {
-    if (this.activeKey) {
-      this.keyPressed = true;
+    if (this.currentState.activeKey) {
+      this.pushState({
+        activeKey: this.currentState.activeKey,
+        keyPressed: true,
+      });
     }
   }
 
   releaseKey() {
-    this.keyPressed = false;
+    if (this.currentState.activeKey && this.currentState.keyPressed) {
+      this.pushState({
+        activeKey: this.currentState.activeKey,
+        keyPressed: false,
+      });
+    }
   }
 }

@@ -11,53 +11,47 @@ type KeyMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
 export class PianoThreeJS {
   public keyMeshes: KeyMesh[];
-  private pianoGltf: GLTF | undefined = undefined;
+  public pianoGltf: GLTF | undefined = undefined;
   private keys: Record<KeyName, PianoKeyThreeJS>;
 
-  constructor(onLoad: (model: THREE.Object3D) => void) {
+  constructor() {
     this.keys = {};
     this.keyMeshes = [];
+  }
 
+  async loadGLTF() {
     const gltfLoader = new GLTFLoader();
 
-    gltfLoader.load(
-      "/models/toy-piano.glb",
-      (gltf) => {
-        this.pianoGltf = gltf;
+    this.pianoGltf = await gltfLoader.loadAsync("/models/toy-piano.glb");
 
-        this.pianoGltf.scene.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
+    this.pianoGltf.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
 
-        this.pianoGltf.scene.rotation.y = -Math.PI / 2;
+    this.pianoGltf.scene.rotation.y = -Math.PI / 2;
 
-        this.keyMeshes =
-          this.pianoGltf.scene
-            .getObjectByName("Keys")
-            ?.children.filter<KeyMesh>((key) => key instanceof THREE.Mesh) ??
-          [];
+    this.keyMeshes =
+      this.pianoGltf.scene
+        .getObjectByName("Keys")
+        ?.children.filter<KeyMesh>((key) => key instanceof THREE.Mesh) ?? [];
 
-        this.keys = this.keyMeshes.reduce<Record<KeyName, PianoKeyThreeJS>>(
-          (acc, keyMesh) => {
-            acc[keyMesh.name] = new PianoKeyThreeJS(keyMesh);
-            return acc;
-          },
-          {},
-        );
-
-        onLoad(this.pianoGltf.scene);
+    this.keys = this.keyMeshes.reduce<Record<KeyName, PianoKeyThreeJS>>(
+      (acc, keyMesh) => {
+        acc[keyMesh.name] = new PianoKeyThreeJS(keyMesh);
+        return acc;
       },
-      () => {},
-      () => {
-        throw new Error(`Error on loading piano gltf`);
-      },
+      {},
     );
   }
 
-  tick(delta: number, { activeKey, keyPressed }: PianoState) {
+  tick(
+    delta: number,
+    currentState: PianoState,
+    prevState: PianoState | undefined,
+  ) {
     // reset keys materials
     const keyArr = Object.values(this.keys);
 
@@ -65,20 +59,35 @@ export class PianoThreeJS {
       key.resetKey();
     });
 
-    if (activeKey) {
-      const key = this.keys[activeKey];
+    if (currentState.activeKey) {
+      const key = this.keys[currentState.activeKey];
 
       if (!key) {
-        throw new Error(`Key mesh wasn\'t found: ${activeKey}`);
+        throw new Error(`Key mesh wasn\'t found: ${currentState.activeKey}`);
       }
 
       key.highlightKey();
 
-      if (keyPressed) {
+      if (currentState.keyPressed && prevState && !prevState.keyPressed) {
         key.pressKey();
-      } else {
+      }
+
+      if (!currentState.keyPressed && prevState && prevState.keyPressed) {
         key.releaseKey();
       }
+    }
+
+    if (
+      prevState?.activeKey &&
+      prevState.activeKey !== currentState.activeKey
+    ) {
+      const key = this.keys[prevState.activeKey];
+
+      if (!key) {
+        throw new Error(`Key mesh wasn\'t found: ${prevState.activeKey}`);
+      }
+
+      key.releaseKey();
     }
 
     keyArr.forEach((key) => {

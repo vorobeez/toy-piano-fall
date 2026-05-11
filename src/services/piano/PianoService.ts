@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { PianoModel, type KeyName } from "../../domains/PianoModel";
 import { PianoThreeJS } from "./PianoThreeJS";
 
@@ -6,9 +5,13 @@ export class PianoService {
   private pianoModel: PianoModel;
   private pianoThreeJS: PianoThreeJS;
 
-  constructor(onGLTFLoad: (pianoObj: THREE.Object3D) => void) {
+  constructor() {
     this.pianoModel = new PianoModel();
-    this.pianoThreeJS = new PianoThreeJS(onGLTFLoad);
+    this.pianoThreeJS = new PianoThreeJS();
+  }
+
+  async load() {
+    await this.pianoThreeJS.loadGLTF();
   }
 
   setActiveKey(keyName: KeyName) {
@@ -31,7 +34,19 @@ export class PianoService {
     return this.pianoThreeJS.keyMeshes;
   }
 
+  getPianoObject() {
+    if (!this.pianoThreeJS.pianoGltf) {
+      throw new Error("Getting piano gltf before loading");
+    }
+
+    return this.pianoThreeJS.pianoGltf.scene;
+  }
+
   tick(delta: number) {
-    this.pianoThreeJS.tick(delta, this.pianoModel);
+    this.pianoThreeJS.tick(
+      delta,
+      this.pianoModel.currentState,
+      this.pianoModel.prevState,
+    );
   }
 }

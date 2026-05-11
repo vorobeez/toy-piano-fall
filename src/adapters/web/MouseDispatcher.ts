@@ -6,7 +6,6 @@ import type { Sizes } from "../../ports/sizes";
 const INITIAL_STATE: Mouse = {
   x: 0,
   y: 0,
-  down: false,
 };
 
 export class MouseDispatcher extends StateDispatcher<Mouse> {
@@ -23,21 +22,6 @@ export class MouseDispatcher extends StateDispatcher<Mouse> {
         // bottom === -1
         y: -((2 * event.clientY) / sizes.height - 1),
       });
-      this.dispatch();
-    });
-
-    window.addEventListener("mousedown", () => {
-      this.update({
-        down: true,
-      });
-      this.dispatch();
-    });
-
-    window.addEventListener("mouseup", () => {
-      this.update({
-        down: false,
-      });
-      this.dispatch();
     });
   }
 }

@@ -14,13 +14,13 @@ export class ThreeJSRenderer {
   private orbitControls: OrbitControls;
   private mouseRaycaster: MouseRaycaster;
   private pianoService: PianoService;
-  private mouseRepository: Repository<Mouse>;
   private timer: THREE.Timer;
 
   constructor(
     canvas: HTMLCanvasElement,
     sizesRepository: Repository<Sizes>,
     mouseRepository: Repository<Mouse>,
+    pianoService: PianoService,
   ) {
     const sizes = sizesRepository.getState();
     this.renderer = new THREE.WebGLRenderer({
@@ -47,12 +47,11 @@ export class ThreeJSRenderer {
     this.orbitControls = new OrbitControls(this.camera, canvas);
     this.orbitControls.enableDamping = true;
 
-    this.mouseRepository = mouseRepository;
     this.mouseRaycaster = new MouseRaycaster(mouseRepository);
 
-    this.pianoService = new PianoService((model) => {
-      this.scene.add(model);
-    });
+    this.pianoService = pianoService;
+
+    this.scene.add(this.pianoService.getPianoObject());
 
     debugRenderer(this.renderer);
 
@@ -106,7 +105,6 @@ export class ThreeJSRenderer {
 
     const delta = this.timer.getDelta();
 
-    const mouseState = this.mouseRepository.getState();
     const firstIntersection = this.mouseRaycaster.checkIntersections(
       this.camera,
       this.pianoService.getKeyMeshes(),
@@ -116,12 +114,6 @@ export class ThreeJSRenderer {
       this.pianoService.setActiveKey(firstIntersection.object.name);
     } else {
       this.pianoService.resetActiveKey();
-    }
-
-    if (mouseState.down) {
-      this.pianoService.pressKey();
-    } else {
-      this.pianoService.releaseKey();
     }
 
     this.pianoService.tick(delta);
