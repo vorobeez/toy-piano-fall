@@ -2,6 +2,7 @@ import { ThreeJSRenderer } from "./entrypoints/threejs/ThreeJSRenderer";
 import { MouseDispatcher } from "./adapters/web/MouseDispatcher";
 import { SizesDispatcher } from "./adapters/web/SizesDispatcher";
 import { PianoService } from "./services/piano/PianoService";
+import { TonePianoAudio } from "./adapters/tone/TonePianoAudio";
 
 const startScreen = document.querySelector<HTMLElement>(".start-screen");
 const startButton = document.querySelector<HTMLButtonElement>(".start-button");
@@ -16,7 +17,8 @@ export const main = async () => {
     throw new Error("html canvas hasn't found");
   }
 
-  const pianoService = new PianoService();
+  const pianoAudio = new TonePianoAudio();
+  const pianoService = new PianoService(pianoAudio);
 
   await pianoService.load();
 

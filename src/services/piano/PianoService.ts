@@ -1,16 +1,20 @@
-import { PianoModel, type KeyName } from "../../domains/PianoModel";
+import { getNote, PianoModel, type KeyName } from "../../domains/PianoModel";
+import type { PianoAudio } from "../../ports/PianoAudio";
 import { PianoThreeJS } from "./PianoThreeJS";
 
 export class PianoService {
   private pianoModel: PianoModel;
   private pianoThreeJS: PianoThreeJS;
+  private pianoAudio: PianoAudio;
 
-  constructor() {
+  constructor(pianoAudio: PianoAudio) {
     this.pianoModel = new PianoModel();
     this.pianoThreeJS = new PianoThreeJS();
+    this.pianoAudio = pianoAudio;
   }
 
   async load() {
+    await this.pianoAudio.start();
     await this.pianoThreeJS.loadGLTF();
   }
 
@@ -24,6 +28,16 @@ export class PianoService {
 
   pressKey() {
     this.pianoModel.pressKey();
+
+    if (
+      this.pianoModel.currentState.activeKey &&
+      !this.pianoModel.prevState?.keyPressed &&
+      this.pianoModel.currentState.keyPressed
+    ) {
+      this.pianoAudio.triggerNote(
+        getNote(this.pianoModel.currentState.activeKey),
+      );
+    }
   }
 
   releaseKey() {
