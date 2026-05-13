@@ -1,10 +1,10 @@
 import { ThreeJSRenderer } from "./entrypoints/threejs/ThreeJSRenderer";
 import { MouseDispatcher } from "./adapters/web/MouseDispatcher";
 import { SizesDispatcher } from "./adapters/web/SizesDispatcher";
-import { PianoService } from "./services/piano/PianoService";
 import { TonePianoAudio } from "./adapters/tone/TonePianoAudio";
 import { RandomWalkStrategy } from "./adapters/tone/RandomWalkStrategy";
 import { ToneBackgroundAudio } from "./adapters/tone/ToneBackgroundAudio";
+import { WorldService } from "./services/world/WorldService";
 
 const startScreen = document.querySelector<HTMLElement>(".start-screen");
 const startButton = document.querySelector<HTMLButtonElement>(".start-button");
@@ -27,30 +27,36 @@ export const main = async () => {
   backgroundAudio.runLoop();
 
   const pianoAudio = new TonePianoAudio();
-  const pianoService = new PianoService(pianoAudio);
-
-  await pianoService.load();
-
-  window.addEventListener("mousedown", () => {
-    pianoService.pressKey();
-  });
-
-  window.addEventListener("mouseup", () => {
-    pianoService.releaseKey();
-  });
 
   const sizesDispatcher = new SizesDispatcher();
   const mouseDispatcher = new MouseDispatcher(sizesDispatcher);
 
+  const worldService = new WorldService(
+    sizesDispatcher,
+    mouseDispatcher,
+    pianoAudio,
+  );
+
+  await worldService.load();
+
   const renderer = new ThreeJSRenderer(
     canvas,
     sizesDispatcher,
-    mouseDispatcher,
-    pianoService,
+    worldService,
+    worldService.getScene(),
+    worldService.getCamera(),
   );
 
   sizesDispatcher.addListener((sizes) => {
     renderer.updateSizes(sizes);
+  });
+
+  window.addEventListener("mousedown", () => {
+    worldService.handleMouseDown();
+  });
+
+  window.addEventListener("mouseup", () => {
+    worldService.handleMouseUp();
   });
 
   renderer.startLoop();

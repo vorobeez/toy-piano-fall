@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { getNote, PianoModel, type KeyName } from "../../domains/PianoModel";
 import type { DiscreteAudio } from "../../ports/Audio";
 import { PianoThreeJS } from "./PianoThreeJS";
@@ -7,15 +8,15 @@ export class PianoService {
   private pianoThreeJS: PianoThreeJS;
   private pianoAudio: DiscreteAudio;
 
-  constructor(pianoAudio: DiscreteAudio) {
+  constructor(scene: THREE.Scene, pianoAudio: DiscreteAudio) {
     this.pianoModel = new PianoModel();
-    this.pianoThreeJS = new PianoThreeJS();
+    this.pianoThreeJS = new PianoThreeJS(scene);
     this.pianoAudio = pianoAudio;
   }
 
   async load() {
     await this.pianoAudio.start();
-    await this.pianoThreeJS.loadGLTF();
+    await this.pianoThreeJS.load();
   }
 
   setActiveKey(keyName: KeyName) {
@@ -46,14 +47,6 @@ export class PianoService {
 
   getKeyMeshes() {
     return this.pianoThreeJS.keyMeshes;
-  }
-
-  getPianoObject() {
-    if (!this.pianoThreeJS.pianoGltf) {
-      throw new Error("Getting piano gltf before loading");
-    }
-
-    return this.pianoThreeJS.pianoGltf.scene;
   }
 
   tick(delta: number) {

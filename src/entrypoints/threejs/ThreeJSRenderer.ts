@@ -2,25 +2,23 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { debugDirectionalLight, debugRenderer } from "./debug";
 import type { Repository } from "../../ports/Repository";
-import type { Mouse } from "../../ports/mouse";
 import type { Sizes } from "../../ports/sizes";
-import { MouseRaycaster } from "./MouseRaycaster";
-import { PianoService } from "../../services/piano/PianoService";
+import type { Renderable } from "../../ports/Renderable";
 
 export class ThreeJSRenderer {
   private renderer: THREE.WebGLRenderer;
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private orbitControls: OrbitControls;
-  private mouseRaycaster: MouseRaycaster;
-  private pianoService: PianoService;
+  private mainService: Renderable;
   private timer: THREE.Timer;
 
   constructor(
     canvas: HTMLCanvasElement,
     sizesRepository: Repository<Sizes>,
-    mouseRepository: Repository<Mouse>,
-    pianoService: PianoService,
+    mainService: Renderable,
+    scene: THREE.Scene,
+    camera: THREE.PerspectiveCamera,
   ) {
     const sizes = sizesRepository.getState();
     this.renderer = new THREE.WebGLRenderer({
@@ -38,24 +36,16 @@ export class ThreeJSRenderer {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.8;
 
-    this.scene = new THREE.Scene();
-
-    this.camera = new THREE.PerspectiveCamera(75, sizes.aspectRatio, 0.1, 100);
-    this.camera.position.set(0, 4, 10);
-    this.scene.add(this.camera);
+    this.scene = scene;
+    this.camera = camera;
 
     this.orbitControls = new OrbitControls(this.camera, canvas);
     this.orbitControls.enableDamping = true;
 
-    this.mouseRaycaster = new MouseRaycaster(mouseRepository);
-
-    this.pianoService = pianoService;
-
-    this.scene.add(this.pianoService.getPianoObject());
+    this.mainService = mainService;
 
     debugRenderer(this.renderer);
 
-    this.addFloor();
     this.addLights();
   }
 
@@ -75,20 +65,6 @@ export class ThreeJSRenderer {
     this.scene.add(ambientLight, directionalLight, directionalLight.target);
   }
 
-  private addFloor() {
-    const floorMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(50, 50),
-      new THREE.MeshStandardMaterial({
-        color: 0x005500,
-      }),
-    );
-    floorMesh.rotation.x = -Math.PI / 2;
-    floorMesh.receiveShadow = true;
-    floorMesh.castShadow = true;
-
-    this.scene.add(floorMesh);
-  }
-
   public updateSizes({ width, height, pixelRatio, aspectRatio }: Sizes) {
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(pixelRatio);
@@ -105,18 +81,7 @@ export class ThreeJSRenderer {
 
     const delta = this.timer.getDelta();
 
-    const firstIntersection = this.mouseRaycaster.checkIntersections(
-      this.camera,
-      this.pianoService.getKeyMeshes(),
-    )[0];
-
-    if (firstIntersection) {
-      this.pianoService.setActiveKey(firstIntersection.object.name);
-    } else {
-      this.pianoService.resetActiveKey();
-    }
-
-    this.pianoService.tick(delta);
+    this.mainService.tick(delta);
 
     this.orbitControls.update();
 

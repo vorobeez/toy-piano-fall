@@ -1,9 +1,6 @@
 import * as THREE from "three";
 
-import {
-  GLTFLoader,
-  type GLTF,
-} from "three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { type KeyName, type PianoState } from "../../domains/PianoModel";
 import { PianoKeyThreeJS } from "./PianoKeyThreeJS";
 
@@ -11,30 +8,31 @@ type KeyMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
 export class PianoThreeJS {
   public keyMeshes: KeyMesh[];
-  public pianoGltf: GLTF | undefined = undefined;
   private keys: Record<KeyName, PianoKeyThreeJS>;
+  private scene: THREE.Scene;
 
-  constructor() {
+  constructor(scene: THREE.Scene) {
     this.keys = {};
     this.keyMeshes = [];
+    this.scene = scene;
   }
 
-  async loadGLTF() {
+  async load() {
     const gltfLoader = new GLTFLoader();
 
-    this.pianoGltf = await gltfLoader.loadAsync("/models/toy-piano.glb");
+    const pianoGltf = await gltfLoader.loadAsync("/models/toy-piano.glb");
 
-    this.pianoGltf.scene.traverse((child) => {
+    pianoGltf.scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
 
-    this.pianoGltf.scene.rotation.y = -Math.PI / 2;
+    pianoGltf.scene.rotation.y = -Math.PI / 2;
 
     this.keyMeshes =
-      this.pianoGltf.scene
+      pianoGltf.scene
         .getObjectByName("Keys")
         ?.children.filter<KeyMesh>((key) => key instanceof THREE.Mesh) ?? [];
 
@@ -45,6 +43,8 @@ export class PianoThreeJS {
       },
       {},
     );
+
+    this.scene.add(pianoGltf.scene);
   }
 
   tick(
