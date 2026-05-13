@@ -3,8 +3,9 @@ import type { NextNoteStrategy, LoopedAudio } from "../../ports/Audio";
 
 const SYNTHS = [
   { volume: -8, detune: 0 },
+  { volume: -11, detune: -11 },
   { volume: -11, detune: 10 },
-  { volume: -14, detune: -15 },
+  { volume: -14, detune: -20 },
 ] as const;
 
 const NOTE_DURATION: Tone.Unit.Time = "2n";
@@ -22,14 +23,14 @@ export class ToneBackgroundAudio implements LoopedAudio {
 
     const reverb = new Tone.Reverb({
       decay: 2.5,
-      wet: 0.8,
+      wet: 0.5,
       preDelay: 0.05,
     }).toDestination();
 
     const master = new Tone.Channel({ volume: -15 }).connect(reverb);
     const filter = new Tone.Filter({
-      type: "lowpass",
-      frequency: 400,
+      type: "bandpass",
+      frequency: 600,
     }).connect(master);
     const mix = new Tone.Channel({ volume: 0 }).connect(filter);
 
@@ -41,7 +42,7 @@ export class ToneBackgroundAudio implements LoopedAudio {
         },
         detune,
         envelope: {
-          attack: 1,
+          attack: 0.1,
           decay: 0.7,
           sustain: 0.5,
           release: 0.5,
@@ -56,11 +57,16 @@ export class ToneBackgroundAudio implements LoopedAudio {
     this.sequence = new Tone.Loop((time) => {
       const note = this.nextNoteStrategy.getNextNote();
 
+      const third = Tone.Frequency(note).transpose(4).toNote();
+      const fifth = Tone.Frequency(note).transpose(7).toNote();
       const octave = Tone.Frequency(note).transpose(12).toNote();
-      const fourth = Tone.Frequency(note).transpose(5).toNote();
 
-      [note, fourth, octave].forEach((n, i) => {
-        sawtoothSynths[i].triggerAttackRelease(n, NOTE_DURATION, time);
+      [note, third, fifth, octave].forEach((n, i) => {
+        sawtoothSynths[i].triggerAttackRelease(
+          n,
+          NOTE_DURATION,
+          time + i * 0.2,
+        );
       });
     }, NOTE_DURATION);
   }
@@ -71,7 +77,7 @@ export class ToneBackgroundAudio implements LoopedAudio {
     }
 
     const transport = Tone.getTransport();
-    transport.bpm.value = 50;
+    transport.bpm.value = 60;
     this.sequence.start(0);
     transport.start();
   }
