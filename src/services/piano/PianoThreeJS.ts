@@ -21,18 +21,23 @@ export class PianoThreeJS {
     const gltfLoader = new GLTFLoader();
 
     const pianoGltf = await gltfLoader.loadAsync("/models/toy-piano.glb");
+    const pianoObj = pianoGltf.scene.getObjectByName("Piano");
 
-    pianoGltf.scene.traverse((child) => {
+    if (!pianoObj) {
+      throw new Error("Piano object hasn't found");
+    }
+
+    pianoObj.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
 
-    pianoGltf.scene.rotation.y = -Math.PI / 2;
+    pianoObj.rotation.y = -Math.PI / 2;
 
     this.keyMeshes =
-      pianoGltf.scene
+      pianoObj
         .getObjectByName("Keys")
         ?.children.filter<KeyMesh>((key) => key instanceof THREE.Mesh) ?? [];
 
@@ -44,7 +49,7 @@ export class PianoThreeJS {
       {},
     );
 
-    this.scene.add(pianoGltf.scene);
+    this.scene.add(pianoObj);
   }
 
   tick(
