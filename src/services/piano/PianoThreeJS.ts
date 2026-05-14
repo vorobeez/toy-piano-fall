@@ -3,17 +3,18 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { type KeyName, type PianoState } from "../../domains/PianoModel";
 import { PianoKeyThreeJS } from "./PianoKeyThreeJS";
+import type { QuarterionLike, Vector3Like } from "../../ports/Render";
 
 type KeyMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
 export class PianoThreeJS {
-  public keyMeshes: KeyMesh[];
-  private keys: Record<KeyName, PianoKeyThreeJS>;
+  private rootMesh: THREE.Object3D | undefined;
+  private keyMeshes: KeyMesh[] | undefined;
+  private collider: THREE.Object3D | undefined;
+  private keys: Record<KeyName, PianoKeyThreeJS> | undefined;
   private scene: THREE.Scene;
 
   constructor(scene: THREE.Scene) {
-    this.keys = {};
-    this.keyMeshes = [];
     this.scene = scene;
   }
 
@@ -22,22 +23,28 @@ export class PianoThreeJS {
 
     const pianoGltf = await gltfLoader.loadAsync("/models/toy-piano.glb");
     const pianoObj = pianoGltf.scene.getObjectByName("Piano");
+    const pianoCollider = pianoGltf.scene.getObjectByName("PianoCollider");
 
     if (!pianoObj) {
       throw new Error("Piano object hasn't found");
     }
 
-    pianoObj.traverse((child) => {
+    if (!pianoCollider) {
+      throw new Error("Collider object hasn't found");
+    }
+
+    this.rootMesh = pianoObj;
+    this.collider = pianoCollider;
+
+    this.rootMesh.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
 
-    pianoObj.rotation.y = -Math.PI / 2;
-
     this.keyMeshes =
-      pianoObj
+      this.rootMesh
         .getObjectByName("Keys")
         ?.children.filter<KeyMesh>((key) => key instanceof THREE.Mesh) ?? [];
 
@@ -49,7 +56,15 @@ export class PianoThreeJS {
       {},
     );
 
-    this.scene.add(pianoObj);
+    this.scene.add(this.rootMesh);
+  }
+
+  sync(position: Vector3Like, rotation: QuarterionLike): void {
+    const rootMesh = this.getRootMesh();
+
+    rootMesh.position.set(position.x, position.y, position.z);
+
+    rootMesh.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
   }
 
   tick(
@@ -57,6 +72,10 @@ export class PianoThreeJS {
     currentState: PianoState,
     prevState: PianoState | undefined,
   ) {
+    if (!this.keys) {
+      throw new Error("GLTF Model hasn't loaded");
+    }
+
     // reset keys materials
     const keyArr = Object.values(this.keys);
 
@@ -98,5 +117,29 @@ export class PianoThreeJS {
     keyArr.forEach((key) => {
       key.tick(delta);
     });
+  }
+
+  getCollider() {
+    if (!this.collider) {
+      throw new Error("GLTF Model hasn't loaded");
+    }
+
+    return this.collider;
+  }
+
+  getKeyMeshes() {
+    if (!this.keyMeshes) {
+      throw new Error("GLTF Model hasn't loaded");
+    }
+
+    return this.keyMeshes;
+  }
+
+  getRootMesh() {
+    if (!this.rootMesh) {
+      throw new Error("GLTF Model hasn't loaded");
+    }
+
+    return this.rootMesh;
   }
 }

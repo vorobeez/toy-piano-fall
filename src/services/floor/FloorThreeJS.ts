@@ -1,13 +1,16 @@
 import * as THREE from "three";
-import type { Renderable } from "../../ports/Renderable";
+import type { FloorParameters } from "./types";
 
 const TEXTURE_REPEAT = 1;
 
-export class FloorThreeJS implements Renderable {
+export class FloorThreeJS {
   private scene: THREE.Scene;
+  private rootMesh: THREE.Mesh | undefined = undefined;
+  private parameters: FloorParameters;
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, parameters: FloorParameters) {
     this.scene = scene;
+    this.parameters = parameters;
   }
 
   async load() {
@@ -46,12 +49,17 @@ export class FloorThreeJS implements Renderable {
     normalTexture.wrapT = THREE.RepeatWrapping;
     normalTexture.wrapS = THREE.RepeatWrapping;
 
-    const floorMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(30, 30, 100, 100),
+    this.rootMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(
+        this.parameters.width,
+        this.parameters.height,
+        100,
+        100,
+      ),
       new THREE.MeshStandardMaterial({
         map: colorTexture,
         displacementMap: dispTexture,
-        displacementScale: 0.3,
+        displacementScale: 0.2,
         displacementBias: -0.1,
         normalMap: normalTexture,
         aoMap: armTexture,
@@ -60,12 +68,10 @@ export class FloorThreeJS implements Renderable {
         color: "#308528",
       }),
     );
-    floorMesh.rotation.x = -Math.PI / 2;
-    floorMesh.receiveShadow = true;
-    floorMesh.castShadow = true;
+    this.rootMesh.rotation.x = -Math.PI / 2;
+    this.rootMesh.receiveShadow = true;
+    this.rootMesh.castShadow = true;
 
-    this.scene.add(floorMesh);
+    this.scene.add(this.rootMesh);
   }
-
-  tick() {}
 }

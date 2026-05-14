@@ -3,7 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { debugDirectionalLight, debugRenderer } from "./debug";
 import type { Repository } from "../../ports/Repository";
 import type { Sizes } from "../../ports/sizes";
-import type { Renderable } from "../../ports/Renderable";
+import type { Renderable } from "../../ports/Render";
 
 export class ThreeJSRenderer {
   private renderer: THREE.WebGLRenderer;

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { getNote, PianoModel, type KeyName } from "../../domains/PianoModel";
 import type { DiscreteAudio } from "../../ports/Audio";
 import { PianoThreeJS } from "./PianoThreeJS";
+import type { QuarterionLike, Vector3Like } from "../../ports/Render";
 
 export class PianoService {
   private pianoModel: PianoModel;
@@ -46,7 +47,7 @@ export class PianoService {
   }
 
   getKeyMeshes() {
-    return this.pianoThreeJS.keyMeshes;
+    return this.pianoThreeJS.getKeyMeshes();
   }
 
   tick(delta: number) {
@@ -55,5 +56,17 @@ export class PianoService {
       this.pianoModel.currentState,
       this.pianoModel.prevState,
     );
+  }
+
+  sync(position: Vector3Like, rotation: QuarterionLike): void {
+    this.pianoThreeJS.sync(position, rotation);
+  }
+
+  getRootMesh(): THREE.Object3D {
+    return this.pianoThreeJS.getRootMesh();
+  }
+
+  getCollider() {
+    return this.pianoThreeJS.getCollider();
   }
 }

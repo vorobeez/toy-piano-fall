@@ -24,7 +24,7 @@ export const main = async () => {
 
   await backgroundAudio.start();
 
-  backgroundAudio.runLoop();
+  //backgroundAudio.runLoop();
 
   const pianoAudio = new TonePianoAudio();
 
