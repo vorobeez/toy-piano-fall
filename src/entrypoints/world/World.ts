@@ -41,7 +41,11 @@ export class World {
 
     this.floorView = new FloorView(FLOOR_PARAMETERS);
 
-    this.pianosController = new PianosController(this.scene, audioWorld);
+    this.pianosController = new PianosController(
+      this.scene,
+      audioWorld,
+      FLOOR_PARAMETERS,
+    );
 
     this.mouseRaycaster = new MouseRaycaster(mouseRepository);
 

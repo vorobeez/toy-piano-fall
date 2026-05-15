@@ -1,7 +1,11 @@
 import * as THREE from "three";
 
 import { getNote, PianosModel, type KeyName } from "../../domains/PianosModel";
-import type { QuarterionLike, Vector3Like } from "../../ports/view";
+import type {
+  PlaneParameters,
+  QuarterionLike,
+  Vector3Like,
+} from "../../ports/view";
 import { PianoView } from "./PianoView";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { AudioWorld } from "../../ports/audio";
@@ -12,12 +16,18 @@ export class PianosController {
   private audioWorld: AudioWorld;
   private pianoObject: THREE.Object3D | undefined;
   private pianoCollider: THREE.Object3D | undefined;
+  private floorParameters: PlaneParameters;
   private scene: THREE.Scene;
 
-  constructor(scene: THREE.Scene, audioWorld: AudioWorld) {
+  constructor(
+    scene: THREE.Scene,
+    audioWorld: AudioWorld,
+    floorParameters: PlaneParameters,
+  ) {
     this.pianosModel = new PianosModel();
     this.audioWorld = audioWorld;
     this.scene = scene;
+    this.floorParameters = floorParameters;
   }
 
   async load() {
@@ -73,12 +83,19 @@ export class PianosController {
     this.pianosModel.pressKey();
 
     if (
+      typeof this.pianosModel.currentState.pianoIndex === "number" &&
       this.pianosModel.currentState.activeKey &&
       !this.pianosModel.prevState?.keyPressed &&
       this.pianosModel.currentState.keyPressed
     ) {
+      const rootMesh =
+        this.pianoViews[this.pianosModel.currentState.pianoIndex].getRootMesh();
+
+      const pan = rootMesh.position.x / (this.floorParameters.width / 2);
+
       this.audioWorld.triggerNote(
         getNote(this.pianosModel.currentState.activeKey),
+        pan,
       );
     }
   }

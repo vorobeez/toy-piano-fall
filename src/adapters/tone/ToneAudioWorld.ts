@@ -20,12 +20,12 @@ export class ToneAudioWorld implements AudioWorld {
     this.backgroundAudio = new ToneBackgroundAudio(new RandomWalkStrategy());
   }
 
-  triggerNote(note: Note): void {
+  triggerNote(note: Note, pan: number): void {
     if (!this.pianoAudio) {
       throw new Error("Audio world hasn't started");
     }
 
-    this.pianoAudio?.triggerNote(note);
+    this.pianoAudio?.triggerNote(note, pan);
   }
 
   runBackgroundAudio(): void {

@@ -3,17 +3,20 @@ import type { Note } from "../../domains/PianosModel";
 
 const NOTE_DURATION: Tone.Unit.Time = "16n";
 
+const PANNNER_DISPOSE_TIMEOUT = 5000;
+
 export class TonePianoAudio {
   private leadToneSynth: Tone.MonoSynth;
   private bellSynth: Tone.FMSynth;
   private noiseSynth: Tone.NoiseSynth;
+  private mainNode: Tone.ToneAudioNode;
 
   constructor() {
     const reverb = new Tone.Reverb({
       decay: 1.5,
       wet: 0.7,
       preDelay: 0.05,
-    }).toDestination();
+    });
 
     const master = new Tone.Channel({ volume: -4 }).connect(reverb);
 
@@ -76,13 +79,25 @@ export class TonePianoAudio {
     this.leadToneSynth.connect(leadToneChannel);
     this.bellSynth.connect(bellChannel);
     this.noiseSynth.connect(noiseFilter);
+
+    this.mainNode = reverb;
   }
 
-  triggerNote(note: Note) {
+  triggerNote(note: Note, pan: number) {
     const now = Tone.now();
+
+    const panner = new Tone.Panner({
+      pan,
+    }).toDestination();
+
+    this.mainNode.connect(panner);
 
     this.leadToneSynth.triggerAttackRelease(note, NOTE_DURATION, now);
     this.bellSynth?.triggerAttackRelease(note, NOTE_DURATION, now);
     this.noiseSynth?.triggerAttackRelease(NOTE_DURATION, now);
+
+    setTimeout(() => {
+      panner.dispose();
+    }, PANNNER_DISPOSE_TIMEOUT);
   }
 }
