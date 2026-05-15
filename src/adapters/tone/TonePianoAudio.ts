@@ -1,17 +1,14 @@
 import * as Tone from "tone";
-import type { DiscreteAudio } from "../../ports/audio";
 import type { Note } from "../../domains/PianosModel";
 
 const NOTE_DURATION: Tone.Unit.Time = "16n";
 
-export class TonePianoAudio implements DiscreteAudio {
-  private leadToneSynth: Tone.MonoSynth | undefined = undefined;
-  private bellSynth: Tone.FMSynth | undefined = undefined;
-  private noiseSynth: Tone.NoiseSynth | undefined = undefined;
+export class TonePianoAudio {
+  private leadToneSynth: Tone.MonoSynth;
+  private bellSynth: Tone.FMSynth;
+  private noiseSynth: Tone.NoiseSynth;
 
-  async start() {
-    await Tone.start();
-
+  constructor() {
     const reverb = new Tone.Reverb({
       decay: 1.5,
       wet: 0.7,
@@ -82,10 +79,6 @@ export class TonePianoAudio implements DiscreteAudio {
   }
 
   triggerNote(note: Note) {
-    if (!this.leadToneSynth) {
-      throw new Error("run start before triggering notes");
-    }
-
     const now = Tone.now();
 
     this.leadToneSynth.triggerAttackRelease(note, NOTE_DURATION, now);

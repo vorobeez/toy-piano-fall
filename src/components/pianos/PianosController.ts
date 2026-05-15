@@ -1,22 +1,22 @@
 import * as THREE from "three";
 
 import { getNote, PianosModel, type KeyName } from "../../domains/PianosModel";
-import type { DiscreteAudio } from "../../ports/audio";
 import type { QuarterionLike, Vector3Like } from "../../ports/view";
 import { PianoView } from "./PianoView";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import type { AudioWorld } from "../../ports/audio";
 
 export class PianosController {
   private pianosModel: PianosModel;
   private pianoViews: PianoView[] = [];
-  private pianoAudio: DiscreteAudio;
+  private audioWorld: AudioWorld;
   private pianoObject: THREE.Object3D | undefined;
   private pianoCollider: THREE.Object3D | undefined;
   private scene: THREE.Scene;
 
-  constructor(scene: THREE.Scene, pianoAudio: DiscreteAudio) {
+  constructor(scene: THREE.Scene, audioWorld: AudioWorld) {
     this.pianosModel = new PianosModel();
-    this.pianoAudio = pianoAudio;
+    this.audioWorld = audioWorld;
     this.scene = scene;
   }
 
@@ -37,8 +37,6 @@ export class PianosController {
 
     this.pianoObject = pianoObj;
     this.pianoCollider = pianoCollider;
-
-    await this.pianoAudio.start();
   }
 
   spawnPiano(position: Vector3Like) {
@@ -79,7 +77,7 @@ export class PianosController {
       !this.pianosModel.prevState?.keyPressed &&
       this.pianosModel.currentState.keyPressed
     ) {
-      this.pianoAudio.triggerNote(
+      this.audioWorld.triggerNote(
         getNote(this.pianosModel.currentState.activeKey),
       );
     }

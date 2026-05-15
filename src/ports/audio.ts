@@ -1,15 +1,11 @@
 import { type Note } from "../domains/PianosModel";
 
-export interface DiscreteAudio {
-  start(): Promise<void>;
-  triggerNote(note: Note): void;
-}
-
 export interface NextNoteStrategy {
   getNextNote(): string;
 }
 
-export interface LoopedAudio {
+export interface AudioWorld {
   start(): Promise<void>;
-  runLoop(): void;
+  triggerNote(note: Note): void;
+  runBackgroundAudio(): void;
 }

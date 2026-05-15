@@ -1,12 +1,10 @@
 import { ThreeJSRenderer } from "./entrypoints/threejs/ThreeJSRenderer";
 import { MouseDispatcher } from "./adapters/web/MouseDispatcher";
 import { SizesDispatcher } from "./adapters/web/SizesDispatcher";
-import { TonePianoAudio } from "./adapters/tone/TonePianoAudio";
-import { RandomWalkStrategy } from "./adapters/tone/RandomWalkStrategy";
-import { ToneBackgroundAudio } from "./adapters/tone/ToneBackgroundAudio";
 import { World } from "./entrypoints/world/World";
 import { debugWorld } from "./debug";
 import { RapierPhysicsWorld } from "./adapters/rapier/RapierPhysicsWorld";
+import { ToneAudioWorld } from "./adapters/tone/ToneAudioWorld";
 
 const startScreen = document.querySelector<HTMLElement>(".start-screen");
 const startButton = document.querySelector<HTMLButtonElement>(".start-button");
@@ -21,17 +19,12 @@ export const main = async () => {
     throw new Error("html canvas hasn't found");
   }
 
-  const backgroundNotesStrategy = new RandomWalkStrategy();
-  const backgroundAudio = new ToneBackgroundAudio(backgroundNotesStrategy);
-
-  await backgroundAudio.start();
-
-  backgroundAudio.runLoop();
-
-  const pianoAudio = new TonePianoAudio();
-
   const sizesDispatcher = new SizesDispatcher();
   const mouseDispatcher = new MouseDispatcher(sizesDispatcher);
+
+  const audioWorld = new ToneAudioWorld();
+
+  await audioWorld.start();
 
   const physicsWorld = new RapierPhysicsWorld();
 
@@ -39,7 +32,7 @@ export const main = async () => {
     sizesDispatcher,
     mouseDispatcher,
     physicsWorld,
-    pianoAudio,
+    audioWorld,
   );
 
   debugWorld(world);
@@ -66,6 +59,7 @@ export const main = async () => {
     world.handleMouseUp();
   });
 
+  audioWorld.runBackgroundAudio();
   renderer.startLoop();
 };
 

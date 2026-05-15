@@ -1,7 +1,6 @@
 import * as THREE from "three";
 
 import { MouseRaycaster } from "./MouseRaycaster";
-import type { DiscreteAudio } from "../../ports/audio";
 import type { Mouse } from "../../ports/mouse";
 import type { Repository } from "../../ports/Repository";
 import type { Sizes } from "../../ports/sizes";
@@ -9,6 +8,7 @@ import { PianosController } from "../../components/pianos/PianosController";
 import { FloorView } from "../../components/floor/FloorView";
 import type { PlaneParameters, Vector3Like } from "../../ports/view";
 import type { PhysicsWorld } from "../../ports/physics";
+import type { AudioWorld } from "../../ports/audio";
 
 const FLOOR_PARAMETERS: PlaneParameters = {
   width: 30,
@@ -22,12 +22,13 @@ export class World {
   private floorView: FloorView;
   private mouseRaycaster: MouseRaycaster;
   private physicsWorld: PhysicsWorld;
+  private audioWorld: AudioWorld;
 
   constructor(
     sizesRepository: Repository<Sizes>,
     mouseRepository: Repository<Mouse>,
     physicsWorld: PhysicsWorld,
-    pianoAudio: DiscreteAudio,
+    audioWorld: AudioWorld,
   ) {
     const sizes = sizesRepository.getState();
 
@@ -40,11 +41,13 @@ export class World {
 
     this.floorView = new FloorView(FLOOR_PARAMETERS);
 
-    this.pianosController = new PianosController(this.scene, pianoAudio);
+    this.pianosController = new PianosController(this.scene, audioWorld);
 
     this.mouseRaycaster = new MouseRaycaster(mouseRepository);
 
     this.physicsWorld = physicsWorld;
+
+    this.audioWorld = audioWorld;
   }
 
   handleMouseDown() {

@@ -1,5 +1,5 @@
 import * as Tone from "tone";
-import type { NextNoteStrategy, LoopedAudio } from "../../ports/audio";
+import type { NextNoteStrategy } from "../../ports/audio";
 
 const SYNTHS = [
   { volume: -8, detune: 0 },
@@ -10,16 +10,12 @@ const SYNTHS = [
 
 const NOTE_DURATION: Tone.Unit.Time = "2n";
 
-export class ToneBackgroundAudio implements LoopedAudio {
+export class ToneBackgroundAudio {
   private nextNoteStrategy: NextNoteStrategy;
-  private sequence: Tone.Loop | undefined = undefined;
+  private sequence: Tone.Loop;
 
   constructor(nextNoteStrategy: NextNoteStrategy) {
     this.nextNoteStrategy = nextNoteStrategy;
-  }
-
-  async start() {
-    await Tone.start();
 
     const reverb = new Tone.Reverb({
       decay: 2.5,
@@ -71,14 +67,9 @@ export class ToneBackgroundAudio implements LoopedAudio {
     }, NOTE_DURATION);
   }
 
-  runLoop() {
-    if (!this.sequence) {
-      throw new Error("run start before running loop");
-    }
+  runSequence() {
+    const now = Tone.now();
 
-    const transport = Tone.getTransport();
-    transport.bpm.value = 60;
-    this.sequence.start(0);
-    transport.start();
+    this.sequence.start(now);
   }
 }
