@@ -1,4 +1,4 @@
-import { type Note } from "../domains/PianoModel";
+import { type Note } from "../domains/PianosModel";
 
 export interface DiscreteAudio {
   start(): Promise<void>;

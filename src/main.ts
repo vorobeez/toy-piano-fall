@@ -4,7 +4,9 @@ import { SizesDispatcher } from "./adapters/web/SizesDispatcher";
 import { TonePianoAudio } from "./adapters/tone/TonePianoAudio";
 import { RandomWalkStrategy } from "./adapters/tone/RandomWalkStrategy";
 import { ToneBackgroundAudio } from "./adapters/tone/ToneBackgroundAudio";
-import { WorldService } from "./services/world/WorldService";
+import { World } from "./entrypoints/world/World";
+import { debugWorld } from "./debug";
+import { RapierPhysicsWorld } from "./adapters/rapier/RapierPhysicsWorld";
 
 const startScreen = document.querySelector<HTMLElement>(".start-screen");
 const startButton = document.querySelector<HTMLButtonElement>(".start-button");
@@ -24,27 +26,32 @@ export const main = async () => {
 
   await backgroundAudio.start();
 
-  //backgroundAudio.runLoop();
+  backgroundAudio.runLoop();
 
   const pianoAudio = new TonePianoAudio();
 
   const sizesDispatcher = new SizesDispatcher();
   const mouseDispatcher = new MouseDispatcher(sizesDispatcher);
 
-  const worldService = new WorldService(
+  const physicsWorld = new RapierPhysicsWorld();
+
+  const world = new World(
     sizesDispatcher,
     mouseDispatcher,
+    physicsWorld,
     pianoAudio,
   );
 
-  await worldService.load();
+  debugWorld(world);
+
+  await world.load();
 
   const renderer = new ThreeJSRenderer(
     canvas,
     sizesDispatcher,
-    worldService,
-    worldService.getScene(),
-    worldService.getCamera(),
+    world,
+    world.getScene(),
+    world.getCamera(),
   );
 
   sizesDispatcher.addListener((sizes) => {
@@ -52,11 +59,11 @@ export const main = async () => {
   });
 
   window.addEventListener("mousedown", () => {
-    worldService.handleMouseDown();
+    world.handleMouseDown();
   });
 
   window.addEventListener("mouseup", () => {
-    worldService.handleMouseUp();
+    world.handleMouseUp();
   });
 
   renderer.startLoop();

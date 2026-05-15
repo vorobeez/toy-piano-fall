@@ -1,6 +1,7 @@
 export type KeyName = string;
 
 export interface PianoState {
+  pianoIndex: number | undefined;
   activeKey: KeyName | undefined;
   keyPressed: boolean;
 }
@@ -68,11 +69,12 @@ export const getNote = (keyName: KeyName): Note => {
 };
 
 const INITIAL_STATE: PianoState = {
+  pianoIndex: undefined,
   activeKey: undefined,
   keyPressed: false,
 };
 
-export class PianoModel {
+export class PianosModel {
   currentState: PianoState = INITIAL_STATE;
   prevState: PianoState | undefined = undefined;
 
@@ -81,16 +83,20 @@ export class PianoModel {
     this.currentState = nextState;
   }
 
-  setActiveKey(keyName: KeyName) {
+  setActiveKey(pianoIndex: number, keyName: KeyName) {
     if (this.currentState.keyPressed) {
       return;
     }
 
-    if (this.currentState.activeKey === keyName) {
+    if (
+      this.currentState.pianoIndex === pianoIndex &&
+      this.currentState.activeKey === keyName
+    ) {
       return;
     }
 
     this.pushState({
+      pianoIndex,
       activeKey: keyName,
       keyPressed: false,
     });
@@ -101,29 +107,40 @@ export class PianoModel {
       return;
     }
 
-    if (this.currentState.activeKey === undefined) {
+    if (
+      this.currentState.activeKey === undefined &&
+      this.currentState.pianoIndex === undefined
+    ) {
       return;
     }
 
     this.pushState({
+      pianoIndex: undefined,
       activeKey: undefined,
       keyPressed: false,
     });
   }
 
   pressKey() {
-    if (this.currentState.activeKey) {
+    if (
+      typeof this.currentState.pianoIndex === "number" &&
+      this.currentState.activeKey
+    ) {
       this.pushState({
-        activeKey: this.currentState.activeKey,
+        ...this.currentState,
         keyPressed: true,
       });
     }
   }
 
   releaseKey() {
-    if (this.currentState.activeKey && this.currentState.keyPressed) {
+    if (
+      typeof this.currentState.pianoIndex === "number" &&
+      this.currentState.activeKey &&
+      this.currentState.keyPressed
+    ) {
       this.pushState({
-        activeKey: this.currentState.activeKey,
+        ...this.currentState,
         keyPressed: false,
       });
     }

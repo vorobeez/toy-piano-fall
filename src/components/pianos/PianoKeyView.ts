@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+import type { Tickable, View } from "../../ports/view";
+
 const HIGHLIGHT_COLOR = "#E78E04";
 
 const MAX_Z_ROTATION = -Math.PI / 50;
@@ -9,8 +11,8 @@ export type KeyMesh = THREE.Mesh<
   THREE.MeshStandardMaterial
 >;
 
-export class PianoKeyThreeJS {
-  mesh: KeyMesh;
+export class PianoKeyView implements View, Tickable {
+  private rootMesh: KeyMesh;
   private material: THREE.MeshStandardMaterial;
   private highlightedMaterial: THREE.MeshStandardMaterial;
   private mixer: THREE.AnimationMixer;
@@ -18,26 +20,26 @@ export class PianoKeyThreeJS {
   private releaseAction: THREE.AnimationAction | undefined;
 
   constructor(mesh: KeyMesh) {
-    this.mesh = mesh;
+    this.rootMesh = mesh;
 
-    this.material = this.mesh.material;
-    this.highlightedMaterial = this.mesh.material.clone();
+    this.material = this.rootMesh.material;
+    this.highlightedMaterial = this.rootMesh.material.clone();
     this.highlightedMaterial.emissive.set(HIGHLIGHT_COLOR);
 
-    this.mixer = new THREE.AnimationMixer(this.mesh);
+    this.mixer = new THREE.AnimationMixer(this.rootMesh);
   }
 
   highlightKey() {
-    this.mesh.material = this.highlightedMaterial;
+    this.rootMesh.material = this.highlightedMaterial;
   }
 
   resetKey() {
-    this.mesh.material = this.material;
+    this.rootMesh.material = this.material;
   }
 
   pressKey() {
     if (!this.pressAction) {
-      const currentZ = this.mesh.rotation.z;
+      const currentZ = this.rootMesh.rotation.z;
 
       if (this.releaseAction) {
         this.releaseAction.stop();
@@ -60,7 +62,7 @@ export class PianoKeyThreeJS {
 
   releaseKey() {
     if (this.pressAction) {
-      const currentZ = this.mesh.rotation.z;
+      const currentZ = this.rootMesh.rotation.z;
 
       this.pressAction.stop();
       this.pressAction = undefined;
@@ -85,5 +87,9 @@ export class PianoKeyThreeJS {
 
   tick(delta: number) {
     this.mixer.update(delta);
+  }
+
+  getRootMesh() {
+    return this.rootMesh;
   }
 }

@@ -1,15 +1,13 @@
 import * as THREE from "three";
-import type { FloorParameters } from "./types";
+import type { Loadable, View, PlaneParameters } from "../../ports/view";
 
 const TEXTURE_REPEAT = 1;
 
-export class FloorThreeJS {
-  private scene: THREE.Scene;
+export class FloorView implements View, Loadable {
   private rootMesh: THREE.Mesh | undefined = undefined;
-  private parameters: FloorParameters;
+  private parameters: PlaneParameters;
 
-  constructor(scene: THREE.Scene, parameters: FloorParameters) {
-    this.scene = scene;
+  constructor(parameters: PlaneParameters) {
     this.parameters = parameters;
   }
 
@@ -71,7 +69,13 @@ export class FloorThreeJS {
     this.rootMesh.rotation.x = -Math.PI / 2;
     this.rootMesh.receiveShadow = true;
     this.rootMesh.castShadow = true;
+  }
 
-    this.scene.add(this.rootMesh);
+  getRootMesh(): THREE.Object3D {
+    if (!this.rootMesh) {
+      throw new Error("View isn't loaded");
+    }
+
+    return this.rootMesh;
   }
 }

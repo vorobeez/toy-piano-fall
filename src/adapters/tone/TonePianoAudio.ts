@@ -1,6 +1,6 @@
 import * as Tone from "tone";
-import type { DiscreteAudio } from "../../ports/Audio";
-import type { Note } from "../../domains/PianoModel";
+import type { DiscreteAudio } from "../../ports/audio";
+import type { Note } from "../../domains/PianosModel";
 
 const NOTE_DURATION: Tone.Unit.Time = "16n";
 

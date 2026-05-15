@@ -1,11 +1,6 @@
-import GUI from "lil-gui";
 import * as THREE from "three";
 
-const gui = new GUI();
-gui.hide();
-if (document.location.hash.includes("#debug")) {
-  gui.show();
-}
+import { gui } from "../../debug";
 
 export const debugRenderer = (renderer: THREE.WebGLRenderer) => {
   const rendererFolder = gui.addFolder("Renderer");

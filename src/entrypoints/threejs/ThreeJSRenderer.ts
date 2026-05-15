@@ -3,20 +3,20 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { debugDirectionalLight, debugRenderer } from "./debug";
 import type { Repository } from "../../ports/Repository";
 import type { Sizes } from "../../ports/sizes";
-import type { Renderable } from "../../ports/Render";
+import type { World } from "../world/World";
 
 export class ThreeJSRenderer {
   private renderer: THREE.WebGLRenderer;
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private orbitControls: OrbitControls;
-  private mainService: Renderable;
+  private world: World;
   private timer: THREE.Timer;
 
   constructor(
     canvas: HTMLCanvasElement,
     sizesRepository: Repository<Sizes>,
-    mainService: Renderable,
+    world: World,
     scene: THREE.Scene,
     camera: THREE.PerspectiveCamera,
   ) {
@@ -42,7 +42,7 @@ export class ThreeJSRenderer {
     this.orbitControls = new OrbitControls(this.camera, canvas);
     this.orbitControls.enableDamping = true;
 
-    this.mainService = mainService;
+    this.world = world;
 
     debugRenderer(this.renderer);
 
@@ -52,13 +52,17 @@ export class ThreeJSRenderer {
   private addLights() {
     const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
     directionalLight.castShadow = true;
-    directionalLight.shadow.camera.far = 15;
-    directionalLight.shadow.mapSize.set(1024, 1024);
+    directionalLight.shadow.camera.far = 40;
+    directionalLight.shadow.camera.left = -20;
+    directionalLight.shadow.camera.right = 20;
+    directionalLight.shadow.camera.top = 20;
+    directionalLight.shadow.camera.bottom = -20;
+    directionalLight.shadow.mapSize.set(2048, 2048);
     directionalLight.shadow.normalBias = 0.002;
     directionalLight.shadow.bias = -0.004;
-    directionalLight.position.set(-5, 5, 8);
+    directionalLight.position.set(-10, 13, 20);
 
     debugDirectionalLight(directionalLight);
 
@@ -81,7 +85,7 @@ export class ThreeJSRenderer {
 
     const delta = this.timer.getDelta();
 
-    this.mainService.tick(delta);
+    this.world.tick(delta);
 
     this.orbitControls.update();
 

@@ -1,4 +1,4 @@
-import type { NextNoteStrategy } from "../../ports/Audio";
+import type { NextNoteStrategy } from "../../ports/audio";
 
 const SCALE = ["C3", "Db3", "F3", "G3", "Bb3"];
 

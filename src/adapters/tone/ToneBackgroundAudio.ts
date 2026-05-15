@@ -1,5 +1,5 @@
 import * as Tone from "tone";
-import type { NextNoteStrategy, LoopedAudio } from "../../ports/Audio";
+import type { NextNoteStrategy, LoopedAudio } from "../../ports/audio";
 
 const SYNTHS = [
   { volume: -8, detune: 0 },
