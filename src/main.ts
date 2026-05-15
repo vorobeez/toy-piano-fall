@@ -59,8 +59,8 @@ export const main = async () => {
     world.handleMouseUp();
   });
 
-  audioWorld.runBackgroundAudio();
   renderer.startLoop();
+  audioWorld.runBackgroundAudio();
 };
 
 startButton?.addEventListener(

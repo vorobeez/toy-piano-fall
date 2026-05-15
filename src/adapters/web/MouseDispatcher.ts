@@ -1,5 +1,5 @@
 import type { Mouse } from "../../ports/mouse";
-import { StateDispatcher } from "../../ports/StateDispatcher";
+import { StateDispatcher } from "../../utilities/StateDispatcher";
 import type { Repository } from "../../ports/Repository";
 import type { Sizes } from "../../ports/sizes";
 

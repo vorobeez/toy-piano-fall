@@ -6,20 +6,45 @@ import type {
   Vector3Like,
   PlaneParameters,
 } from "../../ports/view";
-import type { PhysicsWorld } from "../../ports/physics";
+import type { ContactForceEvent, PhysicsWorld } from "../../ports/physics";
+import type { Dispatcher, Listener } from "../../utilities/Dispatcher";
+import { ThrottledDispatcher } from "../../utilities/ThrottledDispatcher";
 
 const GRAVITY = { x: 0, y: -9.81, z: 0 };
+
+const CONTACT_FORCE_THRESHOLD = 10000;
+
+const DISPATCH_LIMIT = 500;
 
 export class RapierPhysicsWorld implements PhysicsWorld {
   private physicsWorld: RAPIER.World;
   private pianoBodies: RAPIER.RigidBody[] = [];
+  private eventQueue: RAPIER.EventQueue;
+  private dispatcher: Dispatcher<ContactForceEvent>;
 
   constructor() {
     this.physicsWorld = new RAPIER.World(GRAVITY);
+    this.eventQueue = new RAPIER.EventQueue(true);
+    this.dispatcher = new ThrottledDispatcher(DISPATCH_LIMIT);
   }
 
   step() {
-    this.physicsWorld.step();
+    this.physicsWorld.step(this.eventQueue);
+
+    this.eventQueue.drainContactForceEvents((event) => {
+      const force = event.totalForceMagnitude();
+
+      if (force > CONTACT_FORCE_THRESHOLD) {
+        this.dispatcher.dispatch({
+          force,
+          position: {
+            x: 0,
+            y: 0,
+            z: 0,
+          },
+        });
+      }
+    });
   }
 
   private getPianoBody(index: number): RAPIER.RigidBody {
@@ -51,10 +76,12 @@ export class RapierPhysicsWorld implements PhysicsWorld {
       floorParameters.height / 2,
     );
 
+    floorColliderDesc.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+
     this.physicsWorld.createCollider(floorColliderDesc);
   }
 
-  addPianoBody(position: Vector3Like, collider: THREE.Object3D) {
+  addPianoBody(position: Vector3Like, colliderModel: THREE.Object3D) {
     const pianoBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
       position.x,
       position.y,
@@ -63,7 +90,7 @@ export class RapierPhysicsWorld implements PhysicsWorld {
 
     const pianoBody = this.physicsWorld.createRigidBody(pianoBodyDesc);
 
-    collider.traverse((child) => {
+    colliderModel.traverse((child) => {
       if (
         !(
           child instanceof THREE.Mesh &&
@@ -98,9 +125,15 @@ export class RapierPhysicsWorld implements PhysicsWorld {
         .setTranslation(colliderCenter.x, colliderCenter.y, colliderCenter.z)
         .setRotation(quarterion);
 
+      colliderDesc.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+
       this.physicsWorld.createCollider(colliderDesc, pianoBody);
     });
 
     this.pianoBodies.push(pianoBody);
+  }
+
+  addContactForceListener(listener: Listener<ContactForceEvent>): void {
+    this.dispatcher.addListener(listener);
   }
 }

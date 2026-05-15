@@ -52,6 +52,10 @@ export class World {
     this.physicsWorld = physicsWorld;
 
     this.audioWorld = audioWorld;
+
+    this.physicsWorld.addContactForceListener((event) => {
+      console.log(event);
+    });
   }
 
   handleMouseDown() {

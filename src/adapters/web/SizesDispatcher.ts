@@ -1,5 +1,5 @@
 import type { Sizes } from "../../ports/sizes";
-import { StateDispatcher } from "../../ports/StateDispatcher";
+import { StateDispatcher } from "../../utilities/StateDispatcher";
 
 const INITIAL_STATE: Sizes = {
   width: 0,
@@ -11,6 +11,7 @@ const INITIAL_STATE: Sizes = {
 export class SizesDispatcher extends StateDispatcher<Sizes> {
   constructor() {
     super(INITIAL_STATE);
+
     this.update({
       width: window.innerWidth,
       height: window.innerHeight,
