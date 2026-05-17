@@ -7,5 +7,6 @@ export interface NextNoteStrategy {
 export interface AudioWorld {
   start(): Promise<void>;
   triggerNote(note: Note, pan: number): void;
+  triggerCollisionAudio(pan: number, vol: number): void;
   runBackgroundAudio(): void;
 }

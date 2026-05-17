@@ -12,9 +12,18 @@ import { ThrottledDispatcher } from "../../utilities/ThrottledDispatcher";
 
 const GRAVITY = { x: 0, y: -9.81, z: 0 };
 
-const CONTACT_FORCE_THRESHOLD = 10000;
+const CONTACT_FORCE_THRESHOLD = 20000;
 
-const DISPATCH_LIMIT = 500;
+const MAX_FORCE = 200000;
+
+const DISPATCH_LIMIT = 800;
+
+const normalizeForce = (force: number) => {
+  return (
+    (Math.min(force, MAX_FORCE) - CONTACT_FORCE_THRESHOLD) /
+    (MAX_FORCE - CONTACT_FORCE_THRESHOLD)
+  );
+};
 
 export class RapierPhysicsWorld implements PhysicsWorld {
   private physicsWorld: RAPIER.World;
@@ -34,13 +43,20 @@ export class RapierPhysicsWorld implements PhysicsWorld {
     this.eventQueue.drainContactForceEvents((event) => {
       const force = event.totalForceMagnitude();
 
+      const collider1Position = this.physicsWorld
+        .getCollider(event.collider1())
+        .translation();
+      const collider2Position = this.physicsWorld
+        .getCollider(event.collider2())
+        .translation();
+
       if (force > CONTACT_FORCE_THRESHOLD) {
         this.dispatcher.dispatch({
-          force,
+          force: normalizeForce(force),
           position: {
-            x: 0,
-            y: 0,
-            z: 0,
+            x: (collider1Position.x + collider2Position.x) / 2,
+            y: (collider1Position.y + collider2Position.y) / 2,
+            z: (collider1Position.z + collider2Position.z) / 2,
           },
         });
       }

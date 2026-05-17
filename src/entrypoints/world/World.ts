@@ -15,6 +15,8 @@ const FLOOR_PARAMETERS: PlaneParameters = {
   height: 30,
 };
 
+const SPAWN_INTERVAL = 3000;
+
 export class World {
   private pianosController: PianosController;
   private scene: THREE.Scene;
@@ -23,6 +25,7 @@ export class World {
   private mouseRaycaster: MouseRaycaster;
   private physicsWorld: PhysicsWorld;
   private audioWorld: AudioWorld;
+  private spawnStarted: boolean = false;
 
   constructor(
     sizesRepository: Repository<Sizes>,
@@ -34,7 +37,7 @@ export class World {
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, sizes.aspectRatio, 0.1, 100);
-    this.camera.position.set(0, 4, 10);
+    this.camera.position.set(0, 5, 10);
     this.scene.add(this.camera);
 
     this.scene.background = new THREE.Color("#010d1a");
@@ -54,12 +57,20 @@ export class World {
     this.audioWorld = audioWorld;
 
     this.physicsWorld.addContactForceListener((event) => {
-      console.log(event);
+      this.audioWorld.triggerCollisionAudio(0, event.force);
     });
   }
 
   handleMouseDown() {
     this.pianosController.pressKey();
+
+    if (!this.spawnStarted) {
+      this.spawnStarted = true;
+
+      setInterval(() => {
+        this.spawnPiano();
+      }, SPAWN_INTERVAL);
+    }
   }
 
   handleMouseUp() {

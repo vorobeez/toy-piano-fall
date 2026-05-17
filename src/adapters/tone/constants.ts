@@ -1,0 +1,1 @@
+export const PANNNER_DISPOSE_TIMEOUT = 5000;

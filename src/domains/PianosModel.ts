@@ -68,6 +68,12 @@ export const getNote = (keyName: KeyName): Note => {
   return NOTES[keyNum - 1];
 };
 
+export const pickRandomNotes = (count: number): Note[] => {
+  const shuffled = [...NOTES].sort(() => Math.random() - 0.5);
+
+  return shuffled.slice(0, count);
+};
+
 const INITIAL_STATE: PianoState = {
   pianoIndex: undefined,
   activeKey: undefined,

@@ -23,7 +23,7 @@ export class ToneBackgroundAudio {
       preDelay: 0.05,
     }).toDestination();
 
-    const master = new Tone.Channel({ volume: -15 }).connect(reverb);
+    const master = new Tone.Channel({ volume: -16 }).connect(reverb);
     const filter = new Tone.Filter({
       type: "bandpass",
       frequency: 600,
