@@ -12,16 +12,19 @@ export class MouseDispatcher extends StateDispatcher<Mouse> {
   constructor(sizesRepository: Repository<Sizes>) {
     super(INITIAL_STATE);
 
-    window.addEventListener("mousemove", (event) => {
-      const sizes = sizesRepository.getState();
-      this.update({
-        // right === 1
-        // left === -1
-        x: (2 * event.clientX) / sizes.width - 1,
-        // top === 1
-        // bottom === -1
-        y: -((2 * event.clientY) / sizes.height - 1),
-      });
+    window.addEventListener("pointermove", (event) => {
+      this.updateFromPointerEvent(event, sizesRepository.getState());
+    });
+  }
+
+  updateFromPointerEvent(event: PointerEvent, sizes: Sizes) {
+    this.update({
+      // right === 1
+      // left === -1
+      x: (2 * event.clientX) / sizes.width - 1,
+      // top === 1
+      // bottom === -1
+      y: -((2 * event.clientY) / sizes.height - 1),
     });
   }
 }

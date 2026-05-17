@@ -61,7 +61,8 @@ export class World {
     });
   }
 
-  handleMouseDown() {
+  handlePointerDown() {
+    this.updateActiveKey();
     this.pianosController.pressKey();
 
     if (!this.spawnStarted) {
@@ -73,7 +74,7 @@ export class World {
     }
   }
 
-  handleMouseUp() {
+  handlePointerUp() {
     this.pianosController.releaseKey();
   }
 
@@ -134,6 +135,12 @@ export class World {
       this.pianosController.sync(i, pianoBodyPosition, pianoBodyRotation);
     }
 
+    this.updateActiveKey();
+
+    this.pianosController.tick(delta);
+  }
+
+  private updateActiveKey() {
     const firstIntersection = this.mouseRaycaster.checkIntersections(
       this.camera,
       this.pianosController.getKeyMeshes(),
@@ -153,7 +160,5 @@ export class World {
     } else {
       this.pianosController.resetActiveKey();
     }
-
-    this.pianosController.tick(delta);
   }
 }

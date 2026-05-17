@@ -51,12 +51,17 @@ export const main = async () => {
     renderer.updateSizes(sizes);
   });
 
-  window.addEventListener("mousedown", () => {
-    world.handleMouseDown();
+  window.addEventListener("pointerdown", (event) => {
+    mouseDispatcher.updateFromPointerEvent(event, sizesDispatcher.getState());
+    world.handlePointerDown();
   });
 
-  window.addEventListener("mouseup", () => {
-    world.handleMouseUp();
+  window.addEventListener("pointerup", () => {
+    world.handlePointerUp();
+  });
+
+  window.addEventListener("pointercancel", () => {
+    world.handlePointerUp();
   });
 
   renderer.startLoop();
