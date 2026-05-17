@@ -21,15 +21,14 @@ export class ToneCollisionAudio {
     const limiter = new Tone.Limiter(MAX_VOLUME);
 
     const reverb = new Tone.Reverb({
-      decay: 1,
+      decay: 5,
       wet: 0.5,
-      preDelay: 0.05,
     }).connect(limiter);
 
     const master = new Tone.Channel({ volume: 0 }).connect(reverb);
 
     const noiseChannel = new Tone.Channel({ volume: 0 }).connect(master);
-    const bellsChannel = new Tone.Channel({ volume: -8 }).connect(master);
+    const bellsChannel = new Tone.Channel({ volume: -4 }).connect(master);
 
     const noiseFilter = new Tone.Filter({
       type: "lowpass",
