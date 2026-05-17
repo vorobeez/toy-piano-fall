@@ -5,7 +5,7 @@ import { pickRandomNotes } from "../../domains/PianosModel";
 const NOTE_DURATION: Tone.Unit.Time = "16n";
 
 const MAX_VOLUME = 0;
-const MIN_VOLUME = -8;
+const MIN_VOLUME = -12;
 
 // [0..1] to db
 const getVolume = (vol: number) => {
@@ -28,7 +28,7 @@ export class ToneCollisionAudio {
     const master = new Tone.Channel({ volume: 0 }).connect(reverb);
 
     const noiseChannel = new Tone.Channel({ volume: 0 }).connect(master);
-    const bellsChannel = new Tone.Channel({ volume: -4 }).connect(master);
+    const bellsChannel = new Tone.Channel({ volume: -8 }).connect(master);
 
     const noiseFilter = new Tone.Filter({
       type: "lowpass",
