@@ -5,7 +5,7 @@ import { pickRandomNotes } from "../../domains/PianosModel";
 const NOTE_DURATION: Tone.Unit.Time = "16n";
 
 const MAX_VOLUME = 0;
-const MIN_VOLUME = -12;
+const MIN_VOLUME = -10;
 
 // [0..1] to db
 const getVolume = (vol: number) => {
@@ -85,7 +85,7 @@ export class ToneCollisionAudio {
 
     this.noiseSynth?.triggerAttackRelease(NOTE_DURATION, now);
     this.polySynth?.triggerAttackRelease(
-      pickRandomNotes(3),
+      pickRandomNotes(4),
       NOTE_DURATION,
       now,
     );

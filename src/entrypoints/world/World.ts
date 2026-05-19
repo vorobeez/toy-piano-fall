@@ -15,7 +15,7 @@ const FLOOR_PARAMETERS: PlaneParameters = {
   height: 30,
 };
 
-const SPAWN_INTERVAL = 4000;
+const SPAWN_INTERVAL = 3000;
 
 export class World {
   private pianosController: PianosController;
