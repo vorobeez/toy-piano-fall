@@ -57,11 +57,14 @@ export class PianosController {
     const pianoView = new PianoView(this.pianoObject);
     const pianoViewMesh = pianoView.getRootMesh();
     const keyMeshes = pianoView.getKeyMeshes();
+    const pianoIndex = this.pianoViews.length;
 
-    pianoViewMesh.userData.pianoIndex = this.pianoViews.length;
+    pianoViewMesh.traverse((child) => {
+      child.userData.pianoIndex = pianoIndex;
+    });
 
     keyMeshes.forEach((mesh) => {
-      mesh.userData.pianoIndex = this.pianoViews.length;
+      mesh.userData.isPianoKey = true;
     });
 
     pianoViewMesh.position.set(position.x, position.y, position.z);
@@ -104,8 +107,8 @@ export class PianosController {
     this.pianosModel.releaseKey();
   }
 
-  getKeyMeshes() {
-    return this.pianoViews.flatMap((view) => view.getKeyMeshes());
+  getRootMeshes() {
+    return this.pianoViews.map((view) => view.getRootMesh());
   }
 
   tick(delta: number) {

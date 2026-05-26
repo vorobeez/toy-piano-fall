@@ -143,22 +143,20 @@ export class World {
   private updateActiveKey() {
     const firstIntersection = this.mouseRaycaster.checkIntersections(
       this.camera,
-      this.pianosController.getKeyMeshes(),
+      this.pianosController.getRootMeshes(),
     )[0];
 
-    if (firstIntersection) {
-      const pianoIndex = firstIntersection.object.userData.pianoIndex;
-
-      if (typeof pianoIndex !== "number") {
-        throw new Error("Piano index is not defined");
-      }
-
-      this.pianosController.setActiveKey(
-        pianoIndex,
-        firstIntersection.object.name,
-      );
-    } else {
+    if (!firstIntersection || !firstIntersection.object.userData.isPianoKey) {
       this.pianosController.resetActiveKey();
+      return;
     }
+
+    const pianoIndex = firstIntersection.object.userData.pianoIndex;
+
+    if (typeof pianoIndex !== "number") {
+      throw new Error("Piano index is not defined");
+    }
+
+    this.pianosController.setActiveKey(pianoIndex, firstIntersection.object.name);
   }
 }
